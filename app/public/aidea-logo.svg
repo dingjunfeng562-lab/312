@@ -1,0 +1,30 @@
+<svg width="1280" height="420" viewBox="0 0 1280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="aidea-gradient" x1="106" y1="365" x2="408" y2="74" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6b37ff"/>
+      <stop offset="0.46" stop-color="#1662f2"/>
+      <stop offset="1" stop-color="#12c7e8"/>
+    </linearGradient>
+    <linearGradient id="aidea-word" x1="426" y1="265" x2="1166" y2="107" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#143fbd"/>
+      <stop offset="0.36" stop-color="#087fe8"/>
+      <stop offset="0.7" stop-color="#235ef0"/>
+      <stop offset="1" stop-color="#9a49f6"/>
+    </linearGradient>
+    <mask id="bulb-cutout">
+      <rect width="420" height="420" fill="white"/>
+      <path d="M215 183c-36 0-65 29-65 65 0 23 11 42 29 54v27h72v-27c18-12 29-31 29-54 0-36-29-65-65-65Z" fill="black"/>
+      <rect x="183" y="323" width="64" height="28" rx="12" fill="black"/>
+    </mask>
+  </defs>
+  <path d="M101 172c-30 21-50 53-55 89-4 28 2 56 15 79" stroke="url(#aidea-gradient)" stroke-width="12" stroke-linecap="round"/>
+  <path d="M133 133c-38 17-68 48-81 87-10 28-11 60-2 90" stroke="url(#aidea-gradient)" stroke-width="8" stroke-linecap="round" opacity="0.88"/>
+  <circle cx="70" cy="136" r="14" fill="url(#aidea-gradient)"/>
+  <circle cx="48" cy="348" r="14" fill="url(#aidea-gradient)"/>
+  <path d="M122 72l9 26 26 9-26 9-9 26-9-26-26-9 26-9 9-26Z" fill="url(#aidea-gradient)"/>
+  <path d="M190 65l5 17 17 5-17 6-5 17-6-17-17-6 17-5 6-17Z" fill="url(#aidea-gradient)"/>
+  <path mask="url(#bulb-cutout)" d="M62 346 155 99c14-36 66-38 81-2l103 248c7 17-5 35-24 35h-46c-11 0-20-7-24-17l-21-61h-58l-21 61c-4 10-13 17-24 17H85c-18 0-30-18-23-34Z" fill="url(#aidea-gradient)"/>
+  <path d="M215 236l8 23 23 8-23 8-8 23-8-23-23-8 23-8 8-23Z" fill="url(#aidea-gradient)"/>
+  <path d="M185 350h60M190 368h50M198 385h34" stroke="url(#aidea-gradient)" stroke-width="11" stroke-linecap="round"/>
+  <text x="420" y="285" fill="url(#aidea-word)" font-family="Inter, Avenir Next, Segoe UI, Arial, sans-serif" font-size="175" font-weight="700" letter-spacing="2">Aidea</text>
+</svg>
