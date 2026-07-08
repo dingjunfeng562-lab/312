@@ -230,6 +230,16 @@ export async function getFilledApiMarket(
   }));
 }
 
+function getChargeForModel(
+  charge: ChargeProps[],
+  model: string,
+): ChargeProps | undefined {
+  const exact = charge.find((item: ChargeProps) => item.models.includes(model));
+  if (exact) return exact;
+
+  return charge.find((item: ChargeProps) => item.models.includes("*"));
+}
+
 export async function bindMarket(options?: v1Options): Promise<Model[]> {
   const market = await getFilledApiMarket(undefined, options);
   const charge = await getApiCharge(options);
@@ -238,9 +248,7 @@ export async function bindMarket(options?: v1Options): Promise<Model[]> {
     item.response_speed = getModelResponseSpeed(item);
     item.model_type = getModelType(item);
 
-    const instance = charge.find((i: ChargeProps) =>
-      i.models.includes(item.id) || i.models.includes("*"),
-    );
+    const instance = getChargeForModel(charge, item.id);
     if (!instance) return;
 
     item.free = instance.type === nonBilling;

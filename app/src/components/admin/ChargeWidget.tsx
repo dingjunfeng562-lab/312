@@ -68,7 +68,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert.tsx";
 import Tips from "@/components/Tips.tsx";
 import { getQuerySelector, scrollUp, useClipboard } from "@/utils/dom.ts";
 import PopupDialog, { popupTypes } from "@/components/PopupDialog.tsx";
-import { getV1Path } from "@/api/v1.ts";
+import { bindMarket, getV1Path } from "@/api/v1.ts";
 import {
   Dialog,
   DialogContent,
@@ -83,6 +83,9 @@ import { getPricing } from "@/admin/datasets/charge.ts";
 import { useAllModels } from "@/admin/hook.tsx";
 import { toast } from "sonner";
 import { formatDecimal } from "@/utils/base.ts";
+import { useDispatch } from "react-redux";
+import { updateSupportModels } from "@/store/chat.ts";
+import { AppDispatch } from "@/store/index.ts";
 
 const initialState: ChargeProps = {
   id: -1,
@@ -162,7 +165,7 @@ type SyncDialogProps = {
   builtin: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
   system: string;
 };
 
@@ -284,7 +287,7 @@ function SyncDialog({
                   setSiteOpen(false);
                   setSiteCharge([]);
 
-                  onRefresh();
+                  await onRefresh();
                 }
               }}
             >
@@ -299,7 +302,7 @@ function SyncDialog({
 
 type ChargeActionProps = {
   loading: boolean;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
   currentModels: string[];
 };
 
@@ -403,7 +406,7 @@ function ChargeAlert({ models, onClick }: ChargeAlertProps) {
 type ChargeEditorProps = {
   form: ChargeProps;
   dispatch: (action: any) => void;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
   usedModels: string[];
   allModels: string[];
 };
@@ -452,7 +455,7 @@ function ChargeEditor({
     withNotify(t, resp, true);
 
     if (resp.status) clear();
-    onRefresh();
+    await onRefresh();
   }
 
   function clear() {
@@ -671,7 +674,7 @@ function ChargeEditor({
 type ChargeTableProps = {
   data: ChargeProps[];
   dispatch: (action: any) => void;
-  onRefresh: () => void;
+  onRefresh: () => void | Promise<void>;
 };
 
 function ChargeTable({ data, dispatch, onRefresh }: ChargeTableProps) {
@@ -744,7 +747,7 @@ function ChargeTable({ data, dispatch, onRefresh }: ChargeTableProps) {
                     onClick={async () => {
                       const resp = await deleteCharge(charge.id);
                       withNotify(t, resp, true);
-                      onRefresh();
+                      await onRefresh();
                     }}
                   >
                     <Trash className={`h-4 w-4`} />
@@ -761,6 +764,7 @@ function ChargeTable({ data, dispatch, onRefresh }: ChargeTableProps) {
 
 function ChargeWidget() {
   const { t } = useTranslation();
+  const reduxDispatch = useDispatch<AppDispatch>();
   const [data, setData] = useState<ChargeProps[]>([]);
   const [form, dispatch] = useReducer(reducer, initialState);
   const [loading, setLoading] = useState(false);
@@ -782,15 +786,20 @@ function ChargeWidget() {
     );
   }, [loading, allModels, usedModels]);
 
-  async function refresh(ignoreUpdate?: boolean) {
+  async function refresh(ignoreUpdate?: boolean, syncMarket?: boolean) {
     setLoading(true);
     const resp = await listCharge();
     if (!ignoreUpdate) await update();
+    if (syncMarket) {
+      updateSupportModels(reduxDispatch, await bindMarket());
+    }
 
     setLoading(false);
     withNotify(t, resp);
     setData(resp.data);
   }
+
+  const refreshWithMarket = async () => await refresh(false, true);
 
   useEffectAsync(async () => await refresh(true), []);
 
@@ -798,7 +807,7 @@ function ChargeWidget() {
     <div className={`charge-widget`}>
       <ChargeAction
         loading={loading}
-        onRefresh={refresh}
+        onRefresh={refreshWithMarket}
         currentModels={currentModels}
       />
       <ChargeAlert
@@ -806,13 +815,17 @@ function ChargeWidget() {
         onClick={(model) => dispatch({ type: "toggle-model", payload: model })}
       />
       <ChargeEditor
-        onRefresh={refresh}
+        onRefresh={refreshWithMarket}
         form={form}
         dispatch={dispatch}
         allModels={allModels}
         usedModels={usedModels}
       />
-      <ChargeTable data={data} dispatch={dispatch} onRefresh={refresh} />
+      <ChargeTable
+        data={data}
+        dispatch={dispatch}
+        onRefresh={refreshWithMarket}
+      />
     </div>
   );
 }

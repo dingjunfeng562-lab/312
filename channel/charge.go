@@ -105,6 +105,7 @@ func (m *ChargeManager) AddRawRule(charge *Charge) {
 
 func (m *ChargeManager) AddRule(charge Charge) error {
 	m.AddRawRule(&charge)
+	m.Load()
 	return m.SaveConfig()
 }
 
@@ -119,6 +120,7 @@ func (m *ChargeManager) UpdateRawRule(charge *Charge) {
 
 func (m *ChargeManager) UpdateRule(charge Charge) error {
 	m.UpdateRawRule(&charge)
+	m.Load()
 	return m.SaveConfig()
 }
 
@@ -132,6 +134,7 @@ func (m *ChargeManager) SetRawRule(charge *Charge) {
 
 func (m *ChargeManager) SetRule(charge Charge) error {
 	m.SetRawRule(&charge)
+	m.Load()
 	return m.SaveConfig()
 }
 
@@ -146,6 +149,7 @@ func (m *ChargeManager) DeleteRawRule(id int) {
 
 func (m *ChargeManager) DeleteRule(id int) error {
 	m.DeleteRawRule(id)
+	m.Load()
 	return m.SaveConfig()
 }
 
@@ -154,6 +158,7 @@ func (m *ChargeManager) SyncRules(charge ChargeSequence, overwrite bool) error {
 		m.SyncRule(item, overwrite)
 	}
 
+	m.Load()
 	return m.SaveConfig()
 }
 

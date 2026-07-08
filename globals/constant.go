@@ -10,6 +10,7 @@ const (
 
 const (
 	OpenAIChannelType      = "openai"
+	ThirdPartyChannelType  = "third-party"
 	AzureOpenAIChannelType = "azure"
 	ClaudeChannelType      = "claude"
 	SlackChannelType       = "slack"

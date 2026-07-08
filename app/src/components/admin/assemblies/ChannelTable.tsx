@@ -112,7 +112,7 @@ function SyncDialog({ dispatch, open, setOpen }: SyncDialogProps) {
     const data: Channel = {
       id: -1,
       name,
-      type: "openai",
+      type: "third-party",
       models: resp.data,
       priority: 0,
       weight: 1,

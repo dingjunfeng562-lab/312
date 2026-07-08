@@ -54,6 +54,7 @@ export type ChannelInfo = {
 
 export const ChannelTypes: Record<string, string> = {
   openai: "OpenAI",
+  "third-party": "第三方",
   azure: "Azure OpenAI",
   claude: "Anthropic Claude",
   palm: "Google Gemini",
@@ -76,6 +77,7 @@ export const ChannelTypes: Record<string, string> = {
 
 export const ShortChannelTypes: Record<string, string> = {
   openai: "OpenAI",
+  "third-party": "第三方",
   azure: "Azure",
   claude: "Claude",
   palm: "Gemini",
@@ -132,6 +134,13 @@ export const ChannelInfos: Record<string, ChannelInfo> = {
       "dall-e-2",
       "dall-e-3",
     ],
+  },
+  "third-party": {
+    endpoint: "https://api.example.com",
+    format: "<api-key>",
+    models: ["gpt-4o", "gpt-4o-mini"],
+    description:
+      "> 第三方渠道使用 OpenAI-compatible API 格式，接入点填写第三方服务的 API Base 地址。",
   },
   azure: {
     endpoint: "2023-12-01-preview",

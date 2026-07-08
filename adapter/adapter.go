@@ -25,6 +25,7 @@ import (
 
 var channelFactories = map[string]adaptercommon.FactoryCreator{
 	globals.OpenAIChannelType:      openai.NewChatInstanceFromConfig,
+	globals.ThirdPartyChannelType:  openai.NewChatInstanceFromConfig,
 	globals.AzureOpenAIChannelType: azure.NewChatInstanceFromConfig,
 	globals.ClaudeChannelType:      claude.NewChatInstanceFromConfig,
 	globals.SlackChannelType:       slack.NewChatInstanceFromConfig,
