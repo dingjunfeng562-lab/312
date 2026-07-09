@@ -36,15 +36,16 @@ type generalState struct {
 }
 
 type siteState struct {
-	CloseRegister bool    `json:"close_register" mapstructure:"closeregister"`
-	CloseRelay    bool    `json:"close_relay" mapstructure:"closerelay"`
-	RelayPlan     bool    `json:"relay_plan" mapstructure:"relayplan"`
-	Quota         float64 `json:"quota" mapstructure:"quota"`
-	BuyLink       string  `json:"buy_link" mapstructure:"buylink"`
-	Announcement  string  `json:"announcement" mapstructure:"announcement"`
-	Contact       string  `json:"contact" mapstructure:"contact"`
-	Footer        string  `json:"footer" mapstructure:"footer"`
-	AuthFooter    bool    `json:"auth_footer" mapstructure:"authfooter"`
+	CloseRegister  bool    `json:"close_register" mapstructure:"closeregister"`
+	CloseRelay     bool    `json:"close_relay" mapstructure:"closerelay"`
+	RelayPlan      bool    `json:"relay_plan" mapstructure:"relayplan"`
+	InvitationOnly bool    `json:"invitation_only" mapstructure:"invitationonly"`
+	Quota          float64 `json:"quota" mapstructure:"quota"`
+	BuyLink        string  `json:"buy_link" mapstructure:"buylink"`
+	Announcement   string  `json:"announcement" mapstructure:"announcement"`
+	Contact        string  `json:"contact" mapstructure:"contact"`
+	Footer         string  `json:"footer" mapstructure:"footer"`
+	AuthFooter     bool    `json:"auth_footer" mapstructure:"authfooter"`
 }
 
 type whiteList struct {
@@ -106,6 +107,7 @@ func (c *SystemConfig) Load() {
 
 	globals.CloseRegistration = c.Site.CloseRegister
 	globals.CloseRelay = c.Site.CloseRelay
+	globals.InvitationOnly = c.Site.InvitationOnly
 
 	globals.ArticlePermissionGroup = c.Common.Article
 	globals.GenerationPermissionGroup = c.Common.Generation

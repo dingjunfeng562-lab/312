@@ -26,6 +26,7 @@ var AcceptImageStore bool
 var AcceptPromptStore bool
 var CloseRegistration bool
 var CloseRelay bool
+var InvitationOnly bool
 var ModelTypes = map[string]string{}
 
 var SearchEndpoint string

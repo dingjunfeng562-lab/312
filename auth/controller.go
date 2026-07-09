@@ -163,6 +163,17 @@ func RegisterAPI(c *gin.Context) {
 		return
 	}
 
+	// 如果开启了邀请码注册，强制要求邀请码
+	if globals.InvitationOnly {
+		if len(strings.TrimSpace(form.Code)) == 0 {
+			c.JSON(http.StatusOK, gin.H{
+				"status": false,
+				"error":  "invitation code is required",
+			})
+			return
+		}
+	}
+
 	token, err := SignUp(c, form)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{

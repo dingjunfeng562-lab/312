@@ -140,6 +140,20 @@ func SignUp(c *gin.Context, form RegisterForm) (string, error) {
 		return "", errors.New("invalid email verification code")
 	}
 
+	// 如果开启了邀请码注册，验证邀请码
+	invitationCode := strings.TrimSpace(form.Code)
+	var invitation *Invitation
+	if globals.InvitationOnly && len(invitationCode) > 0 {
+		inv, err := GetInvitation(db, invitationCode)
+		if err != nil {
+			return "", fmt.Errorf("invalid invitation code: %s", err.Error())
+		}
+		if inv.IsUsed() {
+			return "", errors.New("this invitation code has been used")
+		}
+		invitation = inv
+	}
+
 	hash := utils.Sha2Encrypt(password)
 
 	user := &User{
@@ -158,6 +172,14 @@ func SignUp(c *gin.Context, form RegisterForm) (string, error) {
 	}
 
 	user.CreateInitialQuota(db)
+
+	// 如果有邀请码，使用邀请码增加配额
+	if invitation != nil {
+		if err := invitation.UseInvitation(db, *user); err != nil {
+			globals.Warn(fmt.Sprintf("failed to use invitation code: %s", err.Error()))
+		}
+	}
+
 	return user.GenerateToken()
 }
 
