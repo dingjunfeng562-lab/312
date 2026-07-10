@@ -156,7 +156,11 @@
     "web-enable-page-summary-tip": "ページごとのサマリーは、より多くのトークンを消費し、出力を遅くする可能性があります",
     "web-disable-page-summary-toast": "ページごとの概要が閉じられました",
     "web-search-quick-toast": "検索深度をクイック検索に切り替えました",
-    "web-search-detailed-toast": "検索深度を詳細検索に切り替えました"
+    "web-search-detailed-toast": "検索深度を詳細検索に切り替えました",
+    "video-settings": "画像の調整(V)",
+    "video-aspect-ratio": "写真のプロポーション",
+    "video-duration": "動画の再生時間",
+    "video-resolution": "解像度"
   },
   "message": {
     "copy": "メッセージをコピー",
@@ -1038,6 +1042,8 @@
     "password-action-desc": "ユーザーの新しいパスワードを入力してください",
     "email-action": "メールアドレスを変更する",
     "email-action-desc": "ユーザーの新しいメールアドレスを入力してください",
+    "invitation-code-action": "招待コードを紐付ける",
+    "invitation-code-action-desc": "このユーザーの登録に使用した招待コードを入力してください。空欄にすると解除します。",
     "default-password": "パスワード変更プロンプト",
     "default-password-prompt": "管理者パスワードはデフォルトのパスワードです。アカウントのセキュリティのため、できるだけ早くパスワードを変更してください。（バックオフィスに移動-システム設定-ルートパスワードの変更）",
     "set-admin-action": "管理者にする",
@@ -1191,6 +1197,9 @@
     "verify": "検証",
     "code": "認証コード",
     "code-placeholder": "認証コードを入力してください",
+    "invitation-code": "招待コード",
+    "invitation-code-placeholder": "招待コードを入力してください",
+    "invitation-code-required": "招待コードを入力してください",
     "send-code": "送信する",
     "incorrect-info": "情報が間違っていますか？",
     "fall-back": "1つ前のステップに戻る",

@@ -15,7 +15,7 @@ async function checkGravatar(
   gravatar_endpoint: string,
   email: string,
 ): Promise<boolean> {
-  if (!email || email === "root@example.com") {
+  if (!email || email === "baishuwan@example.com") {
     return false;
   }
 

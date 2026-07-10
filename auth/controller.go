@@ -11,10 +11,11 @@ import (
 )
 
 type RegisterForm struct {
-	Username string `form:"username" binding:"required"`
-	Password string `form:"password" binding:"required"`
-	Email    string `form:"email" binding:"required"`
-	Code     string `form:"code"`
+	Username       string `form:"username" json:"username" binding:"required"`
+	Password       string `form:"password" json:"password" binding:"required"`
+	Email          string `form:"email" json:"email" binding:"required"`
+	Code           string `form:"code" json:"code"`
+	InvitationCode string `form:"invitation_code" json:"invitation_code"`
 }
 
 type VerifyForm struct {
@@ -165,7 +166,7 @@ func RegisterAPI(c *gin.Context) {
 
 	// 如果开启了邀请码注册，强制要求邀请码
 	if globals.InvitationOnly {
-		if len(strings.TrimSpace(form.Code)) == 0 {
+		if len(strings.TrimSpace(form.InvitationCode)) == 0 {
 			c.JSON(http.StatusOK, gin.H{
 				"status": false,
 				"error":  "invitation code is required",

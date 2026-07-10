@@ -83,14 +83,14 @@
 
 ## 📦 部署方式
 > [!TIP]
-> **部署成功后, 管理员账号为 `root`, 密码默认为 `chatnio123456`**
+> **部署成功后, 管理员账号为 `baishuwan`, 密码默认为 `baishuwan0825`**
 
 ### ✨ Zeabur (一键部署)
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/M86XJI)
 
 > Zeabur 提供一定的免费额度, 可以使用非付费区域进行一键部署，同时也支持计划订阅和弹性计费等方式弹性扩展。
 > 1. 点击 `Deploy` 进行部署, 并输入你希望绑定的域名，等待部署完成。
-> 2. 部署完成后, 请访问你的域名, 并使用用户名 `root` 密码 `chatnio123456` 登录后台管理，请按照提示在 chatnio 后台及时修改密码。
+> 2. 部署完成后, 请访问你的域名, 并使用用户名 `baishuwan` 密码 `baishuwan0825` 登录后台管理，请按照提示在 chatnio 后台及时修改密码。
 
 ### 🐳 宝塔面板 (一键部署)
 
@@ -100,7 +100,7 @@
 4. 安装完成后，进入 **应用商城**，搜索 `CoAI` 并点击 **安装**。
 5. 配置应用基本信息，如您的域名，端口等配置，并点击 **确认** (可使用默认配置)。
 6. 首次安装可能需要等待 1-2 分钟完成数据库初始化。如遇到问题，请查看面板运行日志进行排查。
-7. 访问您配置的域名或服务器 `http://[ip]:[port]`，使用用户名 `root` 和密码 `chatnio123456` 登录后台管理。
+7. 访问您配置的域名或服务器 `http://[ip]:[port]`，使用用户名 `baishuwan` 和密码 `baishuwan0825` 登录后台管理。
 
 ### 阿里云计算巢 (一键部署)
  [![Deploy on AlibabaCloud ComputeNest](https://service-info-public.oss-cn-hangzhou.aliyuncs.com/computenest.svg)](https://computenest.console.aliyun.com/service/instance/create/default?type=user&ServiceName=CoAI社区版)
@@ -108,7 +108,7 @@
 2. 选择付费类型，填写实例参数与网络参数，点击 **确认订单**
 3. 确认部署参数并查看预估价格后，点击立即创建，等待服务实例部署完成
 4. 点击左侧 **服务实例** 等待服务实例部署完成后，点击实例ID进入到详情界面
-5. 点击详情界面**立即使用**中的链接，可进入CoAI社区版界面。默认用户名为`root`，密码`为chatnio123456` 登录后台管理。
+5. 点击详情界面**立即使用**中的链接，可进入CoAI社区版界面。默认用户名为`baishuwan`，密码为`baishuwan0825`，登录后台管理。
 6. 更多操作详情与付费信息，参见：[服务详情](https://computenest.console.aliyun.com/service/detail/cn-hangzhou/service-bfbf676bd89d434691fc/1?type=user&isRecommend=true)
 
 ### ⚡ Docker Compose 安装 (推荐)

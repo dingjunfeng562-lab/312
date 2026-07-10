@@ -70,6 +70,12 @@ type UpdateRootPasswordForm struct {
 	Password string `json:"password" binding:"required"`
 }
 
+type SetInvitationCodeForm struct {
+	Id             int64  `json:"id" binding:"required"`
+	InvitationCode string `json:"invitation_code"`
+}
+
+
 func UpdateMarketAPI(c *gin.Context) {
 	var form MarketModelList
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -501,6 +507,7 @@ func DeleteLoggerAPI(c *gin.Context) {
 func ConsoleLoggerAPI(c *gin.Context) {
 	n := utils.ParseInt(c.Query("n"))
 
+
 	content := getLatestLogs(n)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -508,3 +515,30 @@ func ConsoleLoggerAPI(c *gin.Context) {
 		"content": content,
 	})
 }
+
+func SetInvitationCodeAPI(c *gin.Context) {
+	db := utils.GetDBFromContext(c)
+
+	var form SetInvitationCodeForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	err := setUserInvitationCode(db, form.Id, form.InvitationCode)
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"status":  false,
+			"message": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": true,
+	})
+}
+

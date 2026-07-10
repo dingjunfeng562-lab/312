@@ -141,9 +141,13 @@ func SignUp(c *gin.Context, form RegisterForm) (string, error) {
 	}
 
 	// 如果开启了邀请码注册，验证邀请码
-	invitationCode := strings.TrimSpace(form.Code)
+	invitationCode := strings.TrimSpace(form.InvitationCode)
 	var invitation *Invitation
-	if globals.InvitationOnly && len(invitationCode) > 0 {
+	if globals.InvitationOnly {
+		if invitationCode == "" {
+			return "", errors.New("invitation code is required")
+		}
+
 		inv, err := GetInvitation(db, invitationCode)
 		if err != nil {
 			return "", fmt.Errorf("invalid invitation code: %s", err.Error())

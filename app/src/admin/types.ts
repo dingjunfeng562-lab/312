@@ -110,6 +110,7 @@ export type UserData = {
   expired_at: string;
   level: number;
   enterprise: boolean;
+  invitation_code: string;
 };
 
 export type UserForm = {

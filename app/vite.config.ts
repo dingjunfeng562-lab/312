@@ -4,6 +4,18 @@ import path from "path"
 import { createHtmlPlugin } from 'vite-plugin-html' //@ts-ignore
 import { createTranslationPlugin } from "./src/translator"
 
+const backendTarget = "http://localhost:8094";
+
+const backendProxy = {
+  target: backendTarget,
+  changeOrigin: true,
+};
+
+const apiRewriteProxy = {
+  ...backendProxy,
+  rewrite: (path: string) => `/api${path}`,
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -36,17 +48,29 @@ export default defineConfig({
     },
   },
   server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: false,
+    hmr: {
+      overlay: true,
+    },
     proxy: {
       "/api": {
-        target: "http://localhost:8094",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        ...backendProxy,
         ws: true,
       },
       "/v1": {
-        target: "http://localhost:8094",
-        changeOrigin: true,
-      }
+        ...backendProxy,
+      },
+      "/login": apiRewriteProxy,
+      "/state": apiRewriteProxy,
+      "/register": apiRewriteProxy,
+      "/verify": apiRewriteProxy,
+      "/reset": apiRewriteProxy,
+      "/userinfo": apiRewriteProxy,
+      "/quota": apiRewriteProxy,
+      "/broadcast": apiRewriteProxy,
+      "/conversation": apiRewriteProxy,
     }
   }
 });

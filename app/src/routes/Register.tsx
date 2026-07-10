@@ -127,6 +127,7 @@ function doFormat(form: RegisterForm): RegisterForm {
     repassword: form.repassword.trim(),
     email: form.email.trim(),
     code: form.code.trim(),
+    invitation_code: form.invitation_code.trim(),
   };
 }
 
@@ -141,6 +142,12 @@ function Verify({ form, dispatch, setNext }: CompProps) {
 
     if (!isEmailValid(data.email)) return;
     if (mail && data.code.trim().length === 0) return;
+    if (data.invitation_code.trim().length === 0) {
+      toast.error(t("error"), {
+        description: t("auth.invitation-code-required"),
+      });
+      return;
+    }
 
     const resp = await doRegister(data);
     if (!resp.status) {
@@ -209,6 +216,20 @@ function Verify({ form, dispatch, setNext }: CompProps) {
         </TickButton>
       </div>
 
+      <Label>
+        <Require /> {t("auth.invitation-code")}
+      </Label>
+      <Input
+        placeholder={t("auth.invitation-code-placeholder")}
+        value={form.invitation_code}
+        onChange={(e) =>
+          dispatch({
+            type: "update:invitation_code",
+            payload: e.target.value,
+          })
+        }
+      />
+
       <Button
         tapScale={0.975}
         classNameWrapper={`mt-2`}
@@ -241,6 +262,7 @@ function Register() {
     repassword: "",
     email: "",
     code: "",
+    invitation_code: "",
   });
 
   return (

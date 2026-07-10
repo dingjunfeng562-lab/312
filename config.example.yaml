@@ -17,9 +17,9 @@ secret: secret
 serve_static: true
 
 root:
-  username: root
-  password: chatnio123456
-  email: root@example.com
+  username: baishuwan
+  password: baishuwan0825
+  email: baishuwan@example.com
 
 server:
   port: 8094

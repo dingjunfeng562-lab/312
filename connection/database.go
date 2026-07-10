@@ -19,7 +19,7 @@ var DB *sql.DB
 func configuredRootUsername() string {
 	username := strings.TrimSpace(viper.GetString("root.username"))
 	if username == "" {
-		return "root"
+		return "baishuwan"
 	}
 	return username
 }
@@ -27,7 +27,7 @@ func configuredRootUsername() string {
 func configuredRootPassword() string {
 	password := strings.TrimSpace(viper.GetString("root.password"))
 	if password == "" {
-		return "chatnio123456"
+		return "baishuwan0825"
 	}
 	return password
 }
@@ -35,7 +35,7 @@ func configuredRootPassword() string {
 func configuredRootEmail() string {
 	email := strings.TrimSpace(viper.GetString("root.email"))
 	if email == "" {
-		return "root@example.com"
+		return "baishuwan@example.com"
 	}
 	return email
 }
@@ -126,6 +126,10 @@ func ConnectDatabase() *sql.DB {
 }
 
 func InitRootUser(db *sql.DB) {
+	username := configuredRootUsername()
+	password := utils.Sha2Encrypt(configuredRootPassword())
+	email := configuredRootEmail()
+
 	// create root user if totally empty
 	var count int
 	err := globals.QueryRowDb(db, "SELECT COUNT(*) FROM auth").Scan(&count)
@@ -135,13 +139,11 @@ func InitRootUser(db *sql.DB) {
 	}
 
 	if count == 0 {
-		username := configuredRootUsername()
-		email := configuredRootEmail()
 		globals.Debug(fmt.Sprintf("[service] no user found, creating root user (username: %s, email: %s)", username, email))
 		_, err := globals.ExecDb(db, `
 			INSERT INTO auth (username, password, email, is_admin, bind_id, token)
 			VALUES (?, ?, ?, ?, ?, ?)
-		`, username, utils.Sha2Encrypt(configuredRootPassword()), email, true, 0, username)
+		`, username, password, email, true, 0, username)
 		if err != nil {
 			globals.Warn(fmt.Sprintf("[service] failed to create root user: %s", err.Error()))
 		}
@@ -150,6 +152,39 @@ func InitRootUser(db *sql.DB) {
 	}
 
 	MigrateRootUser(db)
+	EnsureRootUser(db, username, password, email)
+}
+
+func EnsureRootUser(db *sql.DB, username, password, email string) {
+	var id int64
+	var admin sql.NullBool
+	if err := globals.QueryRowDb(db, "SELECT id, is_admin FROM auth WHERE username = ?", username).Scan(&id, &admin); err != nil {
+		globals.Debug(fmt.Sprintf("[service] configured root user not found, creating admin user (username: %s, email: %s)", username, email))
+		_, err := globals.ExecDb(db, `
+			INSERT INTO auth (username, password, email, is_admin, is_banned, bind_id, token)
+			VALUES (?, ?, ?, ?, ?, ?, ?)
+		`, username, password, email, true, false, getMaxBindId(db)+1, username)
+		if err != nil {
+			globals.Warn(fmt.Sprintf("[service] failed to create configured root user: %s", err.Error()))
+		}
+		return
+	}
+
+	if !admin.Valid || !admin.Bool {
+		globals.Debug(fmt.Sprintf("[service] configured root user exists but is not admin, promoting user (username: %s)", username))
+	}
+
+	if _, err := globals.ExecDb(db, "UPDATE auth SET password = ?, is_admin = ?, is_banned = ? WHERE id = ?", password, true, false, id); err != nil {
+		globals.Warn(fmt.Sprintf("[service] failed to repair configured root user: %s", err.Error()))
+	}
+}
+
+func getMaxBindId(db *sql.DB) int64 {
+	var max sql.NullInt64
+	if err := globals.QueryRowDb(db, "SELECT MAX(bind_id) FROM auth").Scan(&max); err != nil || !max.Valid {
+		return 0
+	}
+	return max.Int64
 }
 
 func MigrateRootUser(db *sql.DB) {

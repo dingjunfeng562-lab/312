@@ -13,6 +13,7 @@ import {
   quotaOperation,
   releaseUsageOperation,
   setAdminOperation,
+  setUserInvitationCode,
   subscriptionLevelOperation,
   subscriptionOperation,
   updateEmail,
@@ -54,6 +55,7 @@ import {
   Search,
   Shield,
   ShieldMinus,
+  Ticket,
 } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import PopupDialog, { popupTypes } from "@/components/PopupDialog.tsx";
@@ -124,6 +126,7 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
   const [releaseOpen, setReleaseOpen] = useState<boolean>(false);
   const [banOpen, setBanOpen] = useState<boolean>(false);
   const [adminOpen, setAdminOpen] = useState<boolean>(false);
+  const [invitationOpen, setInvitationOpen] = useState<boolean>(false);
 
   return (
     <>
@@ -301,6 +304,22 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
           return resp.status;
         }}
       />
+      <PopupDialog
+        type={popupTypes.Text}
+        title={t("admin.invitation-code-action")}
+        name={t("admin.invitation-code")}
+        description={t("admin.invitation-code-action-desc")}
+        open={invitationOpen}
+        setOpen={setInvitationOpen}
+        defaultValue={user.invitation_code || ""}
+        onSubmit={async (invitationCode) => {
+          const resp = await setUserInvitationCode(user.id, invitationCode);
+          doToast(t, resp);
+
+          if (resp.status) onRefresh?.();
+          return resp.status;
+        }}
+      />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -316,6 +335,10 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
           <DropdownMenuItem onClick={() => setEmailOpen(true)}>
             <Mail className={`h-4 w-4 mr-2`} />
             {t("admin.email-action")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setInvitationOpen(true)}>
+            <Ticket className={`h-4 w-4 mr-2`} />
+            {t("admin.invitation-code-action")}
           </DropdownMenuItem>
           {user.is_banned ? (
             <DropdownMenuItem onClick={() => setBanOpen(true)}>
@@ -523,6 +546,7 @@ function UserTable() {
                 <TableHead>ID</TableHead>
                 <TableHead>{t("admin.username")}</TableHead>
                 <TableHead>{t("admin.email")}</TableHead>
+                <TableHead>{t("admin.invitation-code")}</TableHead>
                 <TableHead>{t("admin.quota")}</TableHead>
                 <TableHead>{t("admin.used-quota")}</TableHead>
                 <TableHead>{t("admin.is-subscribed")}</TableHead>
@@ -543,6 +567,9 @@ function UserTable() {
                   </TableCell>
                   <TableCell className={`whitespace-nowrap`}>
                     {user.email || "-"}
+                  </TableCell>
+                  <TableCell className={`whitespace-nowrap`}>
+                    {user.invitation_code || "-"}
                   </TableCell>
                   <TableCell>{user.quota}</TableCell>
                   <TableCell>{user.used_quota}</TableCell>

@@ -86,4 +86,6 @@ type UserData struct {
 	Enterprise   bool    `json:"enterprise"`
 	Level        int     `json:"level"`
 	IsBanned     bool    `json:"is_banned"`
+	InvitationCode string  `json:"invitation_code"`
+
 }

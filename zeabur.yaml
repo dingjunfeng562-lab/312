@@ -74,7 +74,7 @@ spec:
 
     ## 🧪 部署
     1. 填入你想要绑定的域名，并点击部署。
-    2. 部署成功后，默认管理用户名为 `root`，管理密码为 `chatnio123456`，请根据提示尽快更换初始密码。
+    2. 部署成功后，默认管理用户名为 `baishuwan`，管理密码为 `baishuwan0825`，请根据提示尽快更换初始密码。
 
     更多更新功能和部署手册请查看 👉 [CoAI.Dev (Github)](https://github.com/coaidev/coai)
   services:
@@ -293,6 +293,6 @@ localization:
 
       ## 🧪 部署
       1. 填入你想要绑定的域名，并点击部署。
-      2. 部署成功后，默认管理用户名为 `root`，管理密码为 `chatnio123456`，请根据提示尽快更换初始密码。
+      2. 部署成功后，默认管理用户名为 `baishuwan`，管理密码为 `baishuwan0825`，请根据提示尽快更换初始密码。
 
       更多更新功能和部署手册请查看 👉 [CoAI.Dev (Github)](https://github.com/coaidev/coai)

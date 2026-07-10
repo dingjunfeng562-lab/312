@@ -67,6 +67,9 @@
     "code": "驗證碼",
     "code-placeholder": "請輸入驗證碼",
     "code-disabled-placeholder": "無需進行電子郵件驗證",
+    "invitation-code": "邀請碼",
+    "invitation-code-placeholder": "請輸入邀請碼",
+    "invitation-code-required": "請輸入邀請碼",
     "send-code": "傳送",
     "incorrect-info": "填錯資訊？",
     "fall-back": "回上一步",
@@ -229,7 +232,11 @@
     "model-not-support-thinking-desc": "目前模型不支援開啟深度思考",
     "plugin": "外掛程式",
     "voice": "語音辨識",
-    "empty-preview": "輸入的內容將會被渲染在此(支援Markdown 語法) ~"
+    "empty-preview": "輸入的內容將會被渲染在此(支援Markdown 語法) ~",
+    "video-settings": "影片設定",
+    "video-aspect-ratio": "畫面比例",
+    "video-duration": "影片時長",
+    "video-resolution": "解析度"
   },
   "message": {
     "copy": "複製訊息",
@@ -601,6 +608,8 @@
     "unban-action-desc": "確定要解除封鎖該使用者？",
     "email-action": "變更電子郵件",
     "email-action-desc": "請輸入使用者的新電子郵件",
+    "invitation-code-action": "綁定邀請碼",
+    "invitation-code-action-desc": "請輸入使用者註冊使用的邀請碼；留空可解除綁定。",
     "quota-action": "點數變更",
     "quota-action-desc": "請輸入點數變更值（正數為增加，負數為減少）",
     "quota-set-action": "點數設定",

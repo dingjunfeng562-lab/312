@@ -6,6 +6,7 @@ import (
 	"chat/utils"
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -49,10 +50,12 @@ func getUsersForm(db *sql.DB, page int64, search string) PaginationForm {
 		    auth.id, auth.username, auth.email, auth.is_admin,
 		    quota.quota, quota.used,
 		    subscription.expired_at, subscription.total_month, subscription.enterprise, subscription.level,
-		    auth.is_banned
+		    auth.is_banned,
+		    COALESCE(invitation.code, '') as invitation_code
 		FROM auth
 		LEFT JOIN quota ON quota.user_id = auth.id
 		LEFT JOIN subscription ON subscription.user_id = auth.id
+		LEFT JOIN invitation ON invitation.used_id = auth.id AND invitation.used = TRUE
 		WHERE auth.username LIKE ?
 		ORDER BY auth.id LIMIT ? OFFSET ?
 	`, "%"+search+"%", pagination, page*pagination)
@@ -75,7 +78,7 @@ func getUsersForm(db *sql.DB, page int64, search string) PaginationForm {
 			subscriptionLevel sql.NullInt64
 			isBanned          sql.NullBool
 		)
-		if err := rows.Scan(&user.Id, &user.Username, &email, &user.IsAdmin, &quota, &usedQuota, &expired, &totalMonth, &isEnterprise, &subscriptionLevel, &isBanned); err != nil {
+		if err := rows.Scan(&user.Id, &user.Username, &email, &user.IsAdmin, &quota, &usedQuota, &expired, &totalMonth, &isEnterprise, &subscriptionLevel, &isBanned, &user.InvitationCode); err != nil {
 			return PaginationForm{
 				Status:  false,
 				Message: err.Error(),
@@ -246,7 +249,7 @@ func UpdateRootPassword(db *sql.DB, cache *redis.Client, password string) error 
 
 	username := strings.TrimSpace(viper.GetString("root.username"))
 	if username == "" {
-		username = "root"
+		username = "baishuwan"
 	}
 
 	if _, err := globals.ExecDb(db, `
@@ -258,6 +261,61 @@ func UpdateRootPassword(db *sql.DB, cache *redis.Client, password string) error 
 	// Clear all user related cache
 	if err := clearUserCache(cache); err != nil {
 		return fmt.Errorf("failed to clear user cache: %v", err)
+	}
+
+	return nil
+}
+
+// setUserInvitationCode sets or updates the invitation code for a user
+func setUserInvitationCode(db *sql.DB, userId int64, invitationCode string) error {
+	invitationCode = strings.TrimSpace(invitationCode)
+	
+	// If empty, remove the invitation code binding
+	if invitationCode == "" {
+		_, err := globals.ExecDb(db, `
+			UPDATE invitation SET used = FALSE, used_id = NULL 
+			WHERE used_id = ? AND used = TRUE
+		`, userId)
+		return err
+	}
+
+	// Check if the invitation code exists
+	var invitationId int64
+	var used bool
+	var currentUsedId sql.NullInt64
+	err := globals.QueryRowDb(db, `
+		SELECT id, used, used_id FROM invitation WHERE code = ?
+	`, invitationCode).Scan(&invitationId, &used, &currentUsedId)
+	
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("invitation code not found")
+		}
+		return fmt.Errorf("failed to query invitation: %w", err)
+	}
+
+	// Check if the code is already used by another user
+	if used && currentUsedId.Valid && currentUsedId.Int64 != userId {
+		return fmt.Errorf("invitation code is already used by another user")
+	}
+
+	// Clear any existing invitation binding for this user
+	_, err = globals.ExecDb(db, `
+		UPDATE invitation SET used = FALSE, used_id = NULL 
+		WHERE used_id = ? AND used = TRUE
+	`, userId)
+	if err != nil {
+		return fmt.Errorf("failed to clear existing invitation: %w", err)
+	}
+
+	// Set the new invitation code
+	_, err = globals.ExecDb(db, `
+		UPDATE invitation SET used = TRUE, used_id = ? 
+		WHERE id = ?
+	`, userId, invitationId)
+	
+	if err != nil {
+		return fmt.Errorf("failed to set invitation code: %w", err)
 	}
 
 	return nil
