@@ -9,11 +9,13 @@ import {
   CreditCard,
   FileClock,
   Gauge,
+  Gift,
   GitFork,
   History,
   Radio,
   ServerCrash,
   Settings,
+  TicketCheck,
   Users,
 } from "lucide-react";
 import router from "@/router.tsx";
@@ -70,6 +72,16 @@ function MenuBar() {
     <div className={cn("admin-menu", open && "open")}>
       <MenuItem title={t("admin.dashboard")} icon={<Gauge />} path={"/"} />
       <MenuItem title={t("admin.user")} icon={<Users />} path={"/users"} />
+      <MenuItem
+        title={t("code-management.invitation-menu")}
+        icon={<TicketCheck />}
+        path={"/invitation"}
+      />
+      <MenuItem
+        title={t("code-management.gift-menu")}
+        icon={<Gift />}
+        path={"/gift-code"}
+      />
       <MenuItem
         title={t("admin.market.title")}
         icon={<BookCopy />}

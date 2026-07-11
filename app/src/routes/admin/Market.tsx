@@ -69,6 +69,14 @@ import {
 import { Label } from "@/components/ui/label.tsx";
 import { uploadResource } from "@/admin/api/system.ts";
 import { withNotify } from "@/api/common.ts";
+import { Badge } from "@/components/ui/badge.tsx";
+import { Checkbox } from "@/components/ui/checkbox.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu.tsx";
 
 type Model = RawModel & {
   seed?: string;
@@ -177,6 +185,10 @@ function reducer(state: MarketForm, action: any): MarketForm {
     case "remove":
       let { idx } = action.payload;
       return [...state.slice(0, idx), ...state.slice(idx + 1)];
+    case "remove-multiple": {
+      const seeds = new Set<string>(action.payload.seeds);
+      return state.filter((model) => !model.seed || !seeds.has(model.seed));
+    }
     case "update":
       let { index, data } = action.payload;
       return [...state.slice(0, index), data, ...state.slice(index + 1)];
@@ -522,6 +534,8 @@ type MarketItemProps = React.DetailedHTMLProps<
   index: number;
   stacked: boolean;
   channelModels: string[];
+  selected: boolean;
+  onSelectedChange: (seed: string, selected: boolean) => void;
   forwardRef?: React.Ref<HTMLDivElement>;
 };
 
@@ -532,6 +546,8 @@ function MarketItem({
   dispatch,
   index,
   channelModels,
+  selected,
+  onSelectedChange,
   forwardRef,
   ...props
 }: MarketItemProps) {
@@ -550,6 +566,15 @@ function MarketItem({
 
   const Actions = ({ stacked }: { stacked?: boolean }) => (
     <div className={`market-row`}>
+      <Checkbox
+        checked={selected}
+        aria-label={t("admin.market.select-model", {
+          name: model.name || model.id,
+        })}
+        onCheckedChange={(checked) =>
+          model.seed && onSelectedChange(model.seed, checked === true)
+        }
+      />
       {!stacked && <div className={`grow`} />}
       <Button
         size={`icon`}
@@ -610,12 +635,13 @@ function MarketItem({
 
       <Button
         size={`icon`}
-        onClick={() =>
+        onClick={() => {
+          model.seed && onSelectedChange(model.seed, false);
           dispatch({
             type: "remove",
             payload: { idx: index },
-          })
-        }
+          });
+        }}
       >
         <Trash2 className={`h-4 w-4`} />
       </Button>
@@ -663,6 +689,24 @@ function MarketItem({
               list={channelModels}
               placeholder={t("admin.market.model-id-placeholder")}
             />
+          </div>
+          <div className={`market-row col-span-2`}>
+            <span>{t("admin.market.model-channels")}</span>
+            <div
+              className={`ml-auto flex flex-row flex-wrap justify-end gap-2`}
+            >
+              {(model.channels || []).length > 0 ? (
+                model.channels?.map((channel) => (
+                  <Badge key={channel} variant={`secondary`}>
+                    {channel}
+                  </Badge>
+                ))
+              ) : (
+                <Badge variant={`outline`}>
+                  {t("admin.market.no-channel")}
+                </Badge>
+              )}
+            </div>
           </div>
           <div className={`market-row`}>
             <span>
@@ -907,6 +951,13 @@ function MarketItem({
           });
         }}
       />
+      <div className={`hidden lg:flex flex-row gap-1 mr-2`}>
+        {(model.channels || []).map((channel) => (
+          <Badge key={channel} variant={`secondary`}>
+            {channel}
+          </Badge>
+        ))}
+      </div>
       <Actions stacked={true} />
     </div>
   );
@@ -917,6 +968,8 @@ type MarketGroupProps = {
   dispatch: Dispatch<any>;
   stacked: boolean;
   channelModels: string[];
+  selected: Set<string>;
+  onSelectedChange: (seed: string, selected: boolean) => void;
 };
 
 function MarketGroup({
@@ -924,6 +977,8 @@ function MarketGroup({
   dispatch,
   stacked,
   channelModels,
+  selected,
+  onSelectedChange,
 }: MarketGroupProps) {
   return form.map((model, index) => (
     <Draggable
@@ -940,6 +995,8 @@ function MarketGroup({
           dispatch={dispatch}
           index={index}
           channelModels={channelModels}
+          selected={!!model.seed && selected.has(model.seed)}
+          onSelectedChange={onSelectedChange}
           forwardRef={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
@@ -1138,6 +1195,7 @@ function Market() {
 
   const [form, dispatch] = useReducer(reducer, []);
   const [open, setOpen] = useState<boolean>(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const { supportModels, update: updateSuppportModels } = useSupportModels(
     (state, data) => {
@@ -1159,6 +1217,69 @@ function Market() {
   );
 
   const loading = stepSupport || stepAll;
+
+  useEffect(() => {
+    const available = new Set(
+      form.flatMap((model) => (model.seed ? [model.seed] : [])),
+    );
+    setSelected((current) => {
+      const next = new Set([...current].filter((seed) => available.has(seed)));
+      return next.size === current.size ? current : next;
+    });
+  }, [form]);
+
+  const allSelected = form.length > 0 && selected.size === form.length;
+  const selectionState: boolean | "indeterminate" = allSelected
+    ? true
+    : selected.size > 0
+    ? "indeterminate"
+    : false;
+
+  const onSelectedChange = (seed: string, checked: boolean) => {
+    setSelected((current) => {
+      const next = new Set(current);
+      checked ? next.add(seed) : next.delete(seed);
+      return next;
+    });
+  };
+
+  const channelGroups = useMemo(() => {
+    const groups = new Map<
+      number,
+      { id: number; name: string; seeds: string[] }
+    >();
+    form.forEach((model) => {
+      if (model.channel_id === undefined || !model.seed) return;
+      const current = groups.get(model.channel_id) || {
+        id: model.channel_id,
+        name:
+          model.channel_name ||
+          model.channels?.[0] ||
+          `${t("admin.market.channel")} #${model.channel_id}`,
+        seeds: [],
+      };
+      current.seeds.push(model.seed);
+      groups.set(model.channel_id, current);
+    });
+    return [...groups.values()].sort((left, right) =>
+      left.name.localeCompare(right.name),
+    );
+  }, [form, t]);
+
+  const toggleAll = (checked: boolean) => {
+    setSelected(
+      checked
+        ? new Set(form.flatMap((model) => (model.seed ? [model.seed] : [])))
+        : new Set(),
+    );
+  };
+
+  const removeSelected = () => {
+    if (selected.size === 0) return;
+    dispatch({ type: "remove-multiple", payload: { seeds: [...selected] } });
+    setSelected(new Set());
+  };
+
   const update = async () => {
     await updateSuppportModels();
     await updateAllModels();
@@ -1244,7 +1365,9 @@ function Market() {
           <CardTitle>{t("admin.market.title")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className={`market-actions flex flex-row items-center mb-4`}>
+          <div
+            className={`market-actions flex flex-row flex-wrap gap-2 items-center mb-4`}
+          >
             <Button
               variant={`outline`}
               className={`whitespace-nowrap`}
@@ -1252,6 +1375,53 @@ function Market() {
             >
               <Activity className={`h-4 w-4 mr-2`} />
               {t("admin.market.sync")}
+            </Button>
+            <div className={`flex flex-row items-center gap-2 px-1`}>
+              <Checkbox
+                id={`market-select-all`}
+                checked={selectionState}
+                onCheckedChange={(checked) => toggleAll(checked === true)}
+              />
+              <Label
+                htmlFor={`market-select-all`}
+                className={`cursor-pointer whitespace-nowrap`}
+              >
+                {t("admin.market.select-all")}
+              </Label>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant={`outline`}
+                  disabled={channelGroups.length === 0}
+                >
+                  {t("admin.market.select-channel")}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align={`start`}
+                className={`max-h-80 overflow-y-auto`}
+              >
+                {channelGroups.map((channel) => (
+                  <DropdownMenuItem
+                    key={channel.id}
+                    onSelect={() => setSelected(new Set(channel.seeds))}
+                  >
+                    <span className={`grow`}>{channel.name}</span>
+                    <Badge variant={`secondary`} className={`ml-3`}>
+                      {channel.seeds.length}
+                    </Badge>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant={`light-destructive`}
+              disabled={selected.size === 0}
+              onClick={removeSelected}
+            >
+              <Trash2 className={`h-4 w-4 mr-2`} />
+              {t("admin.market.batch-delete", { count: selected.size })}
             </Button>
             <div className={`grow`} />
             <Button
@@ -1318,6 +1488,8 @@ function Market() {
                       dispatch={dispatch}
                       stacked={stacked}
                       channelModels={channelModels}
+                      selected={selected}
+                      onSelectedChange={onSelectedChange}
                     />
                   ) : (
                     <p className={`align-center text-sm empty`}>

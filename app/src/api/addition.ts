@@ -68,41 +68,22 @@ export async function getPackage(): Promise<PackageResponse> {
 }
 
 export async function getSubscription(): Promise<SubscriptionResponse> {
-  try {
-    const resp = await axios.get(`/subscription`);
-    if (resp.data.status === false) {
-      return {
-        status: false,
-        is_subscribed: false,
-        level: 0,
-        expired: 0,
-        usage: {},
-      };
-    }
-    return resp.data as SubscriptionResponse;
-  } catch (e) {
-    console.debug(e);
-    return {
-      status: false,
-      is_subscribed: false,
-      level: 0,
-      expired: 0,
-      usage: {},
-    };
-  }
+  // 订阅功能已移除，返回未订阅状态
+  return {
+    status: true,
+    is_subscribed: false,
+    level: 0,
+    expired: 0,
+    usage: {},
+  };
 }
 
 export async function buySubscription(
-  month: number,
-  level: number,
+  _month: number,
+  _level: number,
 ): Promise<BuySubscriptionResponse> {
-  try {
-    const resp = await axios.post(`/subscribe`, { level, month });
-    return resp.data as BuySubscriptionResponse;
-  } catch (e) {
-    console.debug(e);
-    return { status: false, error: "network error" };
-  }
+  // 订阅功能已移除
+  return { status: false, error: "subscription feature disabled" };
 }
 
 export async function getKey(): Promise<ApiKeyResponse> {

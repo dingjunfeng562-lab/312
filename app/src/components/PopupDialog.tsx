@@ -315,6 +315,10 @@ function PopupDialog(props: PopupDialogProps) {
   const { t } = useTranslation();
   const [value, setValue] = useState<string>(defaultValue || "");
 
+  useEffect(() => {
+    if (open) setValue(defaultValue || "");
+  }, [defaultValue, open]);
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>

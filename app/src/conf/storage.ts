@@ -53,6 +53,9 @@ export function parseOfflineModels(models: string): Model[] {
 
         return {
           id: item.id || "",
+          channel_id:
+            typeof item.channel_id === "number" ? item.channel_id : undefined,
+          channel_name: item.channel_name || "",
           name: item.name || "",
           description: item.description || "",
           enabled: item.enabled !== false,

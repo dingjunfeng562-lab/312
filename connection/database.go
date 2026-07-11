@@ -141,9 +141,9 @@ func InitRootUser(db *sql.DB) {
 	if count == 0 {
 		globals.Debug(fmt.Sprintf("[service] no user found, creating root user (username: %s, email: %s)", username, email))
 		_, err := globals.ExecDb(db, `
-			INSERT INTO auth (username, password, email, is_admin, bind_id, token)
-			VALUES (?, ?, ?, ?, ?, ?)
-		`, username, password, email, true, 0, username)
+			INSERT INTO auth (username, password, email, is_admin, token)
+			VALUES (?, ?, ?, ?, ?)
+		`, username, password, email, true, username)
 		if err != nil {
 			globals.Warn(fmt.Sprintf("[service] failed to create root user: %s", err.Error()))
 		}
@@ -161,9 +161,9 @@ func EnsureRootUser(db *sql.DB, username, password, email string) {
 	if err := globals.QueryRowDb(db, "SELECT id, is_admin FROM auth WHERE username = ?", username).Scan(&id, &admin); err != nil {
 		globals.Debug(fmt.Sprintf("[service] configured root user not found, creating admin user (username: %s, email: %s)", username, email))
 		_, err := globals.ExecDb(db, `
-			INSERT INTO auth (username, password, email, is_admin, is_banned, bind_id, token)
-			VALUES (?, ?, ?, ?, ?, ?, ?)
-		`, username, password, email, true, false, getMaxBindId(db)+1, username)
+			INSERT INTO auth (username, password, email, is_admin, is_banned, token)
+			VALUES (?, ?, ?, ?, ?, ?)
+		`, username, password, email, true, false, username)
 		if err != nil {
 			globals.Warn(fmt.Sprintf("[service] failed to create configured root user: %s", err.Error()))
 		}
@@ -177,14 +177,6 @@ func EnsureRootUser(db *sql.DB, username, password, email string) {
 	if _, err := globals.ExecDb(db, "UPDATE auth SET password = ?, is_admin = ?, is_banned = ? WHERE id = ?", password, true, false, id); err != nil {
 		globals.Warn(fmt.Sprintf("[service] failed to repair configured root user: %s", err.Error()))
 	}
-}
-
-func getMaxBindId(db *sql.DB) int64 {
-	var max sql.NullInt64
-	if err := globals.QueryRowDb(db, "SELECT MAX(bind_id) FROM auth").Scan(&max); err != nil || !max.Valid {
-		return 0
-	}
-	return max.Int64
 }
 
 func MigrateRootUser(db *sql.DB) {
@@ -318,22 +310,8 @@ func CreateSharingTable(db *sql.DB) {
 }
 
 func CreateSubscriptionTable(db *sql.DB) {
-	_, err := globals.ExecDb(db, `
-		CREATE TABLE IF NOT EXISTS subscription (
-		  id INT PRIMARY KEY AUTO_INCREMENT,
-		  level INT DEFAULT 1,
-		  user_id INT UNIQUE,
-		  expired_at DATETIME,
-		  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		  total_month INT DEFAULT 0,
-		  enterprise BOOLEAN DEFAULT FALSE,
-		  FOREIGN KEY (user_id) REFERENCES auth(id)
-		);
-	`)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// 订阅功能已移除，不再创建 subscription 表
+	// 如果需要删除已有表，请手动执行: DROP TABLE IF EXISTS subscription;
 }
 
 func CreateApiKeyTable(db *sql.DB) {

@@ -52,7 +52,12 @@ import {
 import { ChatAction } from "@/components/home/assemblies/ChatAction.tsx";
 import Icon from "@/components/utils/Icon.tsx";
 import { toast } from "sonner";
-import { getModelResponseSpeed, getModelType, ModelType } from "@/api/v1.ts";
+import {
+  getModelResponseSpeed,
+  getModelType,
+  isModelMarketAvailable,
+  ModelType,
+} from "@/api/v1.ts";
 
 const tagIcons: { [key: string]: React.ReactNode } = {
   official: <Award />,
@@ -78,6 +83,17 @@ const modelTypeIcons: Record<ModelType, React.ReactNode> = {
 
 function GetModel(models: Model[], name: string): Model {
   return models.find((model) => model.id === name) as Model;
+}
+
+async function goModelMarket(t: (key: string) => string) {
+  if (!(await isModelMarketAvailable())) {
+    toast.warning(t("market.unavailable"), {
+      description: t("market.unavailable-desc"),
+    });
+    return;
+  }
+
+  await router.navigate("/model");
 }
 
 type ModelSelectorProps = {
@@ -168,13 +184,20 @@ export default function ModelFinder(props: ModelSelectorProps) {
       ? supportModels.filter((model) => list.includes(model.id))
       : supportModels.filter((model) => model.default);
 
-    if (raw.length === 0)
-      raw.push({
+    const unique = raw.filter(
+      (item, index, items) =>
+        items.findIndex((model) => model.id === item.id) === index,
+    );
+
+    if (unique.length === 0)
+      unique.push({
         name: "default",
         id: "default",
       } as Model);
 
-    return raw.map((model) => formatModel(subscriptionData, model, level, t));
+    return unique.map((model) =>
+      formatModel(subscriptionData, model, level, t),
+    );
   }, [supportModels, subscriptionData, level, student, modelList, t]);
 
   const current = useMemo((): SelectItemProps => {
@@ -196,7 +219,7 @@ export default function ModelFinder(props: ModelSelectorProps) {
       }}
       onChange={(value: string) => {
         if (value === "market") {
-          router.navigate("/model");
+          void goModelMarket(t);
           return;
         }
         const model = GetModel(supportModels, value);
@@ -249,7 +272,12 @@ export function ModelArea() {
             } as Model,
           ];
 
-    return raw.map((model) => formatModel(subscriptionData, model, level, t));
+    return raw
+      .filter(
+        (item, index, items) =>
+          items.findIndex((model) => model.id === item.id) === index,
+      )
+      .map((model) => formatModel(subscriptionData, model, level, t));
   }, [supportModels, subscriptionData, level, student, modelList, t]);
 
   const starredModels = useMemo(() => {
@@ -272,7 +300,7 @@ export function ModelArea() {
       value={current.name}
       onValueChange={(value: string) => {
         if (value === "market") {
-          router.navigate("/model");
+          void goModelMarket(t);
           return;
         }
         const model = GetModel(supportModels, value);

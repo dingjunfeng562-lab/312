@@ -15,5 +15,6 @@ export type ChargeBaseProps = {
 
 export type ChargeProps = ChargeBaseProps & {
   id: number;
+  channel_id?: number;
   models: string[];
 };

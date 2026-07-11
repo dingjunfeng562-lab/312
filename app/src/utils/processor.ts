@@ -1,8 +1,9 @@
 import { FileArray, FileObject } from "@/api/file.ts";
 
 export function getFile(file: FileObject): string {
+  const safeName = file.name.replace(/[\r\n\]]/g, "_");
   return `\`\`\`file
-[[${file.name}]]
+[[${safeName}]]
 ${file.content}
 \`\`\``;
 }

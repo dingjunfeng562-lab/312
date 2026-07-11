@@ -28,7 +28,14 @@ import {
 } from "./ui/dialog";
 import { useTranslation } from "react-i18next";
 import { useDraggableInput } from "@/utils/dom.ts";
-import { FileObject, FileArray, quickBlobParser } from "@/api/file.ts";
+import {
+  FileObject,
+  FileArray,
+  ImageModelRequiredError,
+  isSupportedFile,
+  quickBlobParser,
+  supportedFileAccept,
+} from "@/api/file.ts";
 import { useSelector } from "react-redux";
 import { getModelFromId, isHighContextModel } from "@/conf/model.ts";
 import { selectModel, selectSupportModels } from "@/store/chat.ts";
@@ -94,72 +101,95 @@ function FileProvider({ files, dispatch }: FileProviderProps) {
 
   const supportModels = useSelector(selectSupportModels);
 
+  const triggerFile = async (files: (File | null)[]) => {
+    const selectedFiles = files.filter((file): file is File => file !== null);
+    if (selectedFiles.length === 0) return;
+
+    setLoading(true);
+    try {
+      await Promise.all(
+        selectedFiles.map(async (file) => {
+          if (file.size === 0 || file.name.trim().length === 0) {
+            toast.error(t("file.empty-file"), {
+              description: t("file.empty-file-prompt"),
+            });
+            return;
+          }
+
+          if (file.size > MaxFileSize) {
+            toast.error(t("file.over-size"), {
+              description: t("file.over-size-prompt", {
+                size: (MaxFileSize / 1024 / 1024).toFixed(),
+              }),
+            });
+            return;
+          }
+
+          if (!isSupportedFile(file)) {
+            toast.error(t("file.unsupported"), {
+              description: t("file.unsupported-prompt", { file: file.name }),
+            });
+            return;
+          }
+
+          const id = Date.now() + Math.random();
+          taskDispatch({
+            type: "add",
+            payload: { id, file, progress: 0 },
+          });
+
+          const info = getModelFromId(supportModels, model);
+          const task = quickBlobParser(
+            file,
+            info ?? {
+              id: model,
+              ocr_model: false,
+              vision_model: false,
+              reverse_model: false,
+            },
+            (progress) => {
+              console.debug(
+                `[parser] task ${id} progress: ${progress.toFixed(2)}%`,
+              );
+              taskDispatch({
+                type: "update-progress",
+                payload: { id, progress },
+              });
+            },
+          );
+
+          toast.promise(task, {
+            loading: t("file.uploading-prompt"),
+            success: () => t("file.parse-success-prompt", { file: file.name }),
+            error: (error: Error) => {
+              return error.message === ImageModelRequiredError
+                ? t("file.image-model-required-prompt")
+                : t("file.parse-error-prompt", { reason: error.message });
+            },
+          });
+          try {
+            const content = await task;
+            addFile({ name: file.name, content, size: file.size });
+          } catch (error) {
+            console.error(`[parser] failed to parse ${file.name}:`, error);
+          } finally {
+            taskDispatch({ type: "remove", payload: id });
+          }
+        }),
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Rebind after every render so uploads emitted by the chat input always use
+  // the latest selected model and its asynchronously loaded capabilities.
   useEffect(() => {
     blobEvent.bind(async (file: File | File[]) => {
-      setOpen?.(true);
+      setOpen(true);
       await triggerFile(Array.isArray(file) ? file : [file]);
     });
-  }, []);
-
-  const triggerFile = async (files: (File | null)[]) => {
-    setLoading(true);
-    for (const file of files) {
-      if (!file) continue;
-      if (file.size > MaxFileSize) {
-        toast.error(t("file.over-size"), {
-          description: t("file.over-size-prompt", {
-            size: (MaxFileSize / 1024 / 1024).toFixed(),
-          }),
-        });
-      } else {
-        const id = Date.now();
-        taskDispatch({
-          type: "add",
-          payload: { id, file, progress: 0 },
-        });
-
-        const info = getModelFromId(supportModels, model);
-        const task = quickBlobParser(
-          file,
-          info ?? {
-            id: model,
-            ocr_model: false,
-            vision_model: false,
-            reverse_model: false,
-          },
-          (progress) => {
-            console.debug(
-              `[parser] task ${id} progress: ${progress.toFixed(2)}%`,
-            );
-            taskDispatch({
-              type: "update-progress",
-              payload: { id, progress },
-            });
-          },
-        );
-
-        toast.promise(task, {
-          loading: t("file.uploading-prompt"),
-          success: (content: string) => {
-            addFile({ name: file.name, content, size: file.size });
-            taskDispatch({
-              type: "remove",
-              payload: id,
-            });
-            return t("file.parse-success-prompt", { file: file.name });
-          },
-          error: (error: Error) => {
-            taskDispatch({
-              type: "remove",
-              payload: id,
-            });
-            return t("file.parse-error-prompt", { reason: error.message });
-          },
-        });
-      }
-    }
-    setLoading(false);
-  };
+  });
 
   function addFile(file: FileObject) {
     console.debug(
@@ -537,8 +567,13 @@ function FileInput({ id, loading, className, handleEvent }: FileInputProps) {
         id={id}
         type="file"
         className={className}
-        onChange={(e) => handleEvent(Array.from(e.target?.files || []))}
-        accept="*"
+        onChange={async (e) => {
+          const input = e.currentTarget;
+          const files = Array.from(input.files || []);
+          input.value = "";
+          await handleEvent(files);
+        }}
+        accept={supportedFileAccept}
         style={{ display: "none" }}
         multiple={true}
         // on transfer file

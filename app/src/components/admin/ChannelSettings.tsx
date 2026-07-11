@@ -22,6 +22,10 @@ const initialState: Channel = {
   secret: "",
   endpoint: getChannelInfo().endpoint,
   mapper: "",
+  auto_models: false,
+  auto_price: false,
+  price_adjust: 0,
+  price_overwrite: false,
   state: true,
   group: [],
   proxy: { ...initialProxyState },
@@ -130,6 +134,14 @@ function reducer(state: Channel, action: any): Channel {
       return { ...state, first_message_as_user: action.value };
     case "set-merge-consecutive-user-messages":
       return { ...state, merge_consecutive_user_messages: action.value };
+    case "set-auto-models":
+      return { ...state, auto_models: action.value };
+    case "set-auto-price":
+      return { ...state, auto_price: action.value };
+    case "set-price-adjust":
+      return { ...state, price_adjust: action.value };
+    case "set-price-overwrite":
+      return { ...state, price_overwrite: action.value };
     case "set":
       return { ...state, ...action.value };
     case "import":

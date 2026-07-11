@@ -19,6 +19,9 @@ export type Channel = {
   endpoint: string;
   mapper: string;
   auto_models?: boolean;
+  auto_price?: boolean;
+  price_adjust?: number;
+  price_overwrite?: boolean;
   state: boolean;
   group?: string[];
   proxy?: {

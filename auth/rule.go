@@ -56,9 +56,11 @@ func CanEnableModel(db *sql.DB, user *User, model string, messages []globals.Mes
 }
 
 func CanEnableModelWithSubscription(db *sql.DB, cache *redis.Client, user *User, model string, messages []globals.Message) (canEnable error, usePlan bool) {
-	// use subscription quota first
-	if user != nil && HandleSubscriptionUsage(db, cache, user, model) {
-		return nil, true
-	}
+	// 订阅功能已移除，直接使用普通权限检查
 	return CanEnableModel(db, user, model, messages), false
+}
+
+// RevertSubscriptionUsage 订阅功能已移除，保留空函数以保持兼容性
+func RevertSubscriptionUsage(db *sql.DB, cache *redis.Client, user *User, model string) bool {
+	return false
 }

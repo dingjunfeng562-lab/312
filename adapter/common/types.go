@@ -21,6 +21,8 @@ type VideoProps struct {
 	Prompt         string  `json:"prompt"`
 	Seconds        *string `json:"seconds,omitempty"`
 	Size           *string `json:"size,omitempty"`
+	AspectRatio    *string `json:"aspect_ratio,omitempty"`
+	Resolution     *string `json:"resolution,omitempty"`
 	InputReference *string `json:"input_reference,omitempty"`
 
 	User string `json:"-"`

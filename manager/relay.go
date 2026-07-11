@@ -13,15 +13,35 @@ func ModelAPI(c *gin.Context) {
 }
 
 func MarketAPI(c *gin.Context) {
-	c.JSON(http.StatusOK, admin.MarketInstance.GetModels())
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+
+	expandedModels := admin.MarketModelList{}
+	for _, model := range admin.MarketInstance.GetAllModels().ActiveChannelModels(channel.ConduitInstance, true) {
+		if model.ChannelId == nil {
+			expandedModels = append(expandedModels, model)
+			continue
+		}
+		ch := channel.ConduitInstance.GetSequence().GetChannelById(*model.ChannelId)
+		model.ChannelName = ch.GetName()
+		model.Channels = nil
+		expandedModels = append(expandedModels, model)
+	}
+
+	c.JSON(http.StatusOK, expandedModels)
 }
 
 func ChargeAPI(c *gin.Context) {
-	c.JSON(http.StatusOK, channel.ChargeInstance.ListRules())
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+	c.JSON(http.StatusOK, channel.ChargeInstance.ListActiveRules(channel.ConduitInstance))
 }
 
 func PlanAPI(c *gin.Context) {
-	c.JSON(http.StatusOK, channel.PlanInstance.GetPlans())
+	// 订阅功能已移除，返回空列表
+	c.JSON(http.StatusOK, []interface{}{})
 }
 
 func sendErrorResponse(c *gin.Context, err error, types ...string) {

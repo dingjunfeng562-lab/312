@@ -74,18 +74,32 @@ type RedeemGenerateResponse struct {
 }
 
 type UserData struct {
-	Id           int64   `json:"id"`
-	Username     string  `json:"username"`
-	Email        string  `json:"email"`
-	IsAdmin      bool    `json:"is_admin"`
-	Quota        float32 `json:"quota"`
-	UsedQuota    float32 `json:"used_quota"`
-	ExpiredAt    string  `json:"expired_at"`
-	IsSubscribed bool    `json:"is_subscribed"`
-	TotalMonth   int64   `json:"total_month"`
-	Enterprise   bool    `json:"enterprise"`
-	Level        int     `json:"level"`
-	IsBanned     bool    `json:"is_banned"`
+	Id             int64   `json:"id"`
+	Username       string  `json:"username"`
+	Email          string  `json:"email"`
+	IsAdmin        bool    `json:"is_admin"`
+	Quota          float32 `json:"quota"`
+	UsedQuota      float32 `json:"used_quota"`
+	ExpiredAt      string  `json:"expired_at"`
+	IsSubscribed   bool    `json:"is_subscribed"`
+	TotalMonth     int64   `json:"total_month"`
+	Enterprise     bool    `json:"enterprise"`
+	Level          int     `json:"level"`
+	IsBanned       bool    `json:"is_banned"`
 	InvitationCode string  `json:"invitation_code"`
+}
 
+type UserFilter struct {
+	Plan  string
+	Admin string
+	Ban   string
+	Sort  string
+}
+
+type UserProfileUpdate struct {
+	Username   string
+	Email      string
+	UsedQuota  float32
+	TotalMonth int64
+	Enterprise bool
 }

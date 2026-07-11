@@ -12,13 +12,15 @@ import (
 var ConduitInstance *Manager
 var ChargeInstance *ChargeManager
 var SystemInstance *SystemConfig
-var PlanInstance *PlanManager
 
 func InitManager() {
 	ConduitInstance = NewChannelManager()
 	ChargeInstance = NewChargeManager()
 	SystemInstance = NewSystemConfig()
-	PlanInstance = NewPlanManager()
+
+	if err := ConduitInstance.SaveConfig(); err != nil {
+		globals.Warn("[channel] failed to persist automatically loaded models: " + err.Error())
+	}
 }
 
 func NewChannelManager() *Manager {
@@ -46,7 +48,10 @@ func (m *Manager) Load() {
 			channel.Load()
 		}
 	}
+	m.reloadActiveModels()
+}
 
+func (m *Manager) reloadActiveModels() {
 	// init support models
 	m.Models = []string{}
 	for _, channel := range m.GetActiveSequence() {
@@ -101,6 +106,11 @@ func (m *Manager) GetActiveSequence() Sequence {
 	return seq
 }
 
+func (m *Manager) IsChannelActive(id int) bool {
+	channel := m.Sequence.GetChannelById(id)
+	return channel != nil && channel.GetState()
+}
+
 func (m *Manager) GetModels() []string {
 	return m.Models
 }
@@ -146,16 +156,26 @@ func (m *Manager) SaveConfig() error {
 }
 
 func (m *Manager) CreateChannel(channel *Channel) error {
-	channel.Id = m.GetMaxId() + 1
+	if channel.Id <= 0 {
+		channel.Id = m.GetMaxId() + 1
+	}
 	m.Sequence = append(m.Sequence, channel)
-	return m.SaveConfig()
+	if err := m.SaveConfig(); err != nil {
+		return err
+	}
+	m.Load()
+	return nil
 }
 
 func (m *Manager) UpdateChannel(id int, channel *Channel) error {
 	for i, item := range m.Sequence {
 		if item.Id == id {
 			m.Sequence[i] = channel
-			return m.SaveConfig()
+			if err := m.SaveConfig(); err != nil {
+				return err
+			}
+			m.Load()
+			return nil
 		}
 	}
 	return errors.New("channel not found")
@@ -165,7 +185,11 @@ func (m *Manager) DeleteChannel(id int) error {
 	for i, item := range m.Sequence {
 		if item.Id == id {
 			m.Sequence = append(m.Sequence[:i], m.Sequence[i+1:]...)
-			return m.SaveConfig()
+			if err := m.SaveConfig(); err != nil {
+				return err
+			}
+			m.reloadActiveModels()
+			return nil
 		}
 	}
 	return errors.New("channel not found")
@@ -175,7 +199,11 @@ func (m *Manager) ActivateChannel(id int) error {
 	for i, item := range m.Sequence {
 		if item.Id == id {
 			m.Sequence[i].State = true
-			return m.SaveConfig()
+			if err := m.SaveConfig(); err != nil {
+				return err
+			}
+			m.reloadActiveModels()
+			return nil
 		}
 	}
 	return errors.New("channel not found")
@@ -185,7 +213,11 @@ func (m *Manager) DeactivateChannel(id int) error {
 	for i, item := range m.Sequence {
 		if item.Id == id {
 			m.Sequence[i].State = false
-			return m.SaveConfig()
+			if err := m.SaveConfig(); err != nil {
+				return err
+			}
+			m.reloadActiveModels()
+			return nil
 		}
 	}
 	return errors.New("channel not found")

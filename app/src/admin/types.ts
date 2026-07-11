@@ -4,6 +4,10 @@ export type CommonResponse = {
   error?: string;
 };
 
+export type QuotaOperationResponse = CommonResponse & {
+  quota?: number;
+};
+
 export type InfoResponse = {
   billing_today: number;
   billing_yesterday: number;

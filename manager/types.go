@@ -122,6 +122,8 @@ type RelayVideoForm struct {
 	Prompt         string  `json:"prompt" binding:"required"`
 	Seconds        *string `json:"seconds,omitempty"`
 	Size           *string `json:"size,omitempty"`
+	AspectRatio    *string `json:"aspect_ratio,omitempty"`
+	Resolution     *string `json:"resolution,omitempty"`
 	InputReference *string `json:"input_reference,omitempty"`
 }
 
@@ -144,6 +146,7 @@ type RelayVideoJob struct {
 	Seconds            string           `json:"seconds"`
 	Size               string           `json:"size"`
 	Status             string           `json:"status"`
+	Url                string           `json:"url,omitempty"`
 }
 
 func transformContent(content interface{}) string {

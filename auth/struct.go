@@ -11,7 +11,6 @@ type User struct {
 	ID           int64      `json:"id"`
 	Username     string     `json:"username"`
 	Email        string     `json:"email"`
-	BindID       int64      `json:"bind_id"`
 	Password     string     `json:"password"`
 	Token        string     `json:"token"`
 	Admin        bool       `json:"is_admin"`
@@ -166,32 +165,13 @@ func IsEmailExist(db *sql.DB, email string) bool {
 	return count > 0
 }
 
-func getMaxBindId(db *sql.DB) int64 {
-	var max int64
-	if err := globals.QueryRowDb(db, "SELECT MAX(bind_id) FROM auth").Scan(&max); err != nil {
-		return 0
-	}
-	return max
-}
-
 func GetGroup(db *sql.DB, user *User) string {
 	if user == nil {
 		return globals.AnonymousType
 	}
 
-	level := user.GetSubscriptionLevel(db)
-	switch level {
-	case 0:
-		return globals.NormalType
-	case 1:
-		return globals.BasicType
-	case 2:
-		return globals.StandardType
-	case 3:
-		return globals.ProType
-	default:
-		return globals.NormalType
-	}
+	// 所有用户都是普通用户，不再区分订阅等级
+	return globals.NormalType
 }
 
 func HitGroup(db *sql.DB, user *User, group string) bool {

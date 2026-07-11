@@ -14,8 +14,8 @@ func (s *Sequence) Swap(i, j int) {
 	(*s)[i], (*s)[j] = (*s)[j], (*s)[i]
 }
 
-func (s *Sequence) GetChannelById(id int) *Channel {
-	for _, channel := range *s {
+func (s Sequence) GetChannelById(id int) *Channel {
+	for _, channel := range s {
 		if channel.Id == id {
 			return channel
 		}

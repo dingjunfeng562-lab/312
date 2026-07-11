@@ -17,6 +17,7 @@ import {
   Image,
   Link,
   MessageSquare,
+  Mic2,
   Search,
   Snail,
   Sparkles,
@@ -26,9 +27,9 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { splitList } from "@/utils/base.ts";
-import type { Model } from "@/api/types.tsx";
+import { getModelEntryKey, type Model } from "@/api/types.tsx";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addModelList,
@@ -36,7 +37,9 @@ import {
   selectModel,
   selectModelList,
   selectSupportModels,
+  setCurrent,
   setModel,
+  updateSupportModels,
 } from "@/store/chat.ts";
 import { levelSelector } from "@/store/subscription.ts";
 import { teenagerSelector } from "@/store/package.ts";
@@ -64,7 +67,12 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import Tips from "@/components/Tips";
 import Icon from "@/components/utils/Icon";
-import { getModelResponseSpeed, getModelType, ModelType } from "@/api/v1.ts";
+import {
+  getModelResponseSpeed,
+  getModelType,
+  bindMarket,
+  ModelType,
+} from "@/api/v1.ts";
 
 const tagIcons: { [key: string]: React.ReactNode } = {
   official: <Award />,
@@ -109,7 +117,40 @@ type SearchBarProps = {
   onDisplayPricingChange: (value: boolean) => void;
   show1mPricing: boolean;
   onShow1mPricingChange: (value: boolean) => void;
+  category: ExploreCategory;
+  onCategoryChange: (value: ExploreCategory) => void;
 };
+
+type ExploreCategory = "free" | "video" | "image" | "text" | "voice";
+
+const exploreCategories: Array<{
+  id: ExploreCategory;
+  label: string;
+  icon: React.ReactNode;
+}> = [
+  { id: "free", label: "\u514d\u8d39", icon: <Zap /> },
+  { id: "video", label: "\u89c6\u9891", icon: <Video /> },
+  { id: "image", label: "\u56fe\u7247", icon: <Image /> },
+  { id: "text", label: "\u6587\u5b57", icon: <MessageSquare /> },
+  { id: "voice", label: "\u8bed\u97f3", icon: <Mic2 /> },
+];
+
+function isVoiceModel(model: Model): boolean {
+  const declaredType = (model.model_type || "").toLowerCase();
+  if (["audio", "voice", "speech", "tts"].includes(declaredType)) return true;
+
+  const identity = `${model.id} ${model.name}`.toLowerCase();
+  return /(^|[-_/ ])(tts|speech|voice|audio|whisper|transcribe|music)([-_/ .]|$)/.test(identity);
+}
+
+function modelMatchesCategory(model: Model, category: ExploreCategory): boolean {
+  if (category === "free") return model.free || model.price?.type === nonBilling;
+  if (category === "voice") return isVoiceModel(model);
+
+  const modelType = getModelType(model);
+  if (category === "text") return modelType === "chat" && !isVoiceModel(model);
+  return modelType === category;
+}
 
 function getTags(model: Model): string[] {
   let raw = model.tag || [];
@@ -132,6 +173,8 @@ function SearchBar({
   onDisplayPricingChange,
   show1mPricing,
   onShow1mPricingChange,
+  category,
+  onCategoryChange,
 }: SearchBarProps) {
   const { t } = useTranslation();
 
@@ -184,6 +227,32 @@ function SearchBar({
           className={cn("clear-icon", text.length > 0 && "active")}
           onClick={() => onTextChange("")}
         />
+      </div>
+      <div className="my-3 grid grid-cols-5 gap-2" role="tablist" aria-label="Model categories">
+        {exploreCategories.map((item) => {
+          const count = supportModels.filter((model) => modelMatchesCategory(model, item.id)).length;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={category === item.id}
+              onClick={() => onCategoryChange(item.id)}
+              className={cn(
+                "flex min-w-0 items-center justify-center gap-1.5 rounded-lg border px-2 py-2 text-sm transition-colors",
+                category === item.id
+                  ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                  : "bg-background/70 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+              )}
+            >
+              <Icon icon={item.icon} className="h-4 w-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+              <span className={cn("text-xs", category === item.id ? "text-primary-foreground/80" : "text-muted-foreground")}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
       <motion.div
         className={`tags-search-area`}
@@ -287,7 +356,7 @@ function PriceColumn({
           </span>
         </motion.div>
       );
-    case tokenBilling:
+    case tokenBilling: {
       const inputValue = input * unitValue;
       const outputValue = output * unitValue;
 
@@ -299,7 +368,9 @@ function PriceColumn({
             transition={{ type: "spring", stiffness: 300 }}
           >
             <ArrowUpFromDot className={iconClassName} />
-            <span className="flex-grow">{inputValue}</span>
+            <span className="flex-grow">
+              {t("tag.badges.token-price", { price: inputValue })}
+            </span>
             <span className="text-2xs ml-1 px-1.5 bg-input/40 select-none rounded-sm">
               {unitName}
             </span>
@@ -310,13 +381,16 @@ function PriceColumn({
             transition={{ type: "spring", stiffness: 300 }}
           >
             <ArrowDownToDot className={iconClassName} />
-            <span className="flex-grow">{outputValue}</span>
+            <span className="flex-grow">
+              {t("tag.badges.token-price", { price: outputValue })}
+            </span>
             <span className="text-2xs ml-1 px-1.5 bg-input/40 select-none rounded-sm">
               {unitName}
             </span>
           </motion.div>
         </div>
       );
+    }
   }
 }
 
@@ -371,8 +445,12 @@ function ModelItem({
           return;
         }
 
+        // A historical conversation restores its own model when selected.
+        // Start a fresh conversation so the market selection remains the
+        // model used by the next request.
+        dispatch(setCurrent(-1));
         dispatch(setModel(model.id));
-        router.navigate("/");
+        void router.navigate("/");
 
         toast.info(t("market.switch-model"), {
           description: (
@@ -414,6 +492,17 @@ function ModelItem({
           <div className={"flex flex-row items-center model-name mr-2"}>
             {model.name}
           </div>
+          {model.channel_name && (
+            <Tips
+              content={t("market.channel-source")}
+              trigger={
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded-md border bg-secondary/30 text-xs text-muted-foreground ml-1">
+                  <Cloud className="w-3 h-3 mr-1" />
+                  {model.channel_name}
+                </span>
+              }
+            />
+          )}
           {/* <Tips
             content={model.id}
             trigger={<Tag className={`w-5 h-5 p-1 bg-primary/5 rounded-sm`} />}
@@ -567,20 +656,22 @@ function ModelItem({
 
 type MarketPlaceProps = {
   search: string;
+  category: ExploreCategory;
   showPricing: boolean;
   show1mPricing: boolean;
 };
 
-function MarketPlace({ search, showPricing, show1mPricing }: MarketPlaceProps) {
+function MarketPlace({ search, category, showPricing, show1mPricing }: MarketPlaceProps) {
   const { t } = useTranslation();
   const select = useSelector(selectModel);
   const supportModels = useSelector(selectSupportModels);
 
   const models = useMemo(() => {
-    if (search.length === 0) return supportModels;
+    const categorized = supportModels.filter((model) => modelMatchesCategory(model, category));
+    if (search.length === 0) return categorized;
     // fuzzy search
     const raw = splitList(search.toLowerCase(), [" ", ",", ";", "-"]);
-    return supportModels.filter((model) => {
+    return categorized.filter((model) => {
       const name = model.name.toLowerCase();
 
       const tag = getTags(model);
@@ -610,7 +701,7 @@ function MarketPlace({ search, showPricing, show1mPricing }: MarketPlaceProps) {
           modelTypeName.includes(item),
       );
     });
-  }, [supportModels, search]);
+  }, [supportModels, search, category, t]);
 
   return (
     <motion.div
@@ -622,7 +713,7 @@ function MarketPlace({ search, showPricing, show1mPricing }: MarketPlaceProps) {
       <AnimatePresence>
         {models.map((model, index) => (
           <ModelItem
-            key={index}
+            key={getModelEntryKey(model)}
             model={model}
             className={cn(select === model.id && "active")}
             showPricing={showPricing}
@@ -691,10 +782,14 @@ function MarketFooter() {
 
 function Model() {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
+  const [marketAvailable, setMarketAvailable] = useState<boolean>(false);
+  const [checkingMarket, setCheckingMarket] = useState<boolean>(true);
   const [displayPricing, setDisplayPricing] = useState<boolean>(true);
   const [show1mPricing, setShow1mPricing] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>("");
   const [searchTags, setSearchTags] = useState<string[]>([]);
+  const [category, setCategory] = useState<ExploreCategory>("free");
 
   const search = useMemo(() => {
     return [
@@ -702,6 +797,33 @@ function Model() {
       ...searchTags.filter((tag) => tag !== "").map((v) => t(`tag.${v}`)),
     ].join(" ");
   }, [searchText, searchTags]);
+
+  useEffect(() => {
+    let active = true;
+
+    void bindMarket().then((models) => {
+      if (!active) return;
+
+      const available = models.some((model) => model.price !== undefined);
+      if (!available) {
+        toast.warning(t("market.unavailable"), {
+          description: t("market.unavailable-desc"),
+        });
+        void router.navigate("/", { replace: true });
+      } else {
+        updateSupportModels(dispatch, models);
+      }
+
+      setMarketAvailable(available);
+      setCheckingMarket(false);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [dispatch, t]);
+
+  if (checkingMarket || !marketAvailable) return null;
 
   return (
     <ScrollArea className={`model-market`}>
@@ -750,9 +872,12 @@ function Model() {
           onDisplayPricingChange={setDisplayPricing}
           show1mPricing={show1mPricing}
           onShow1mPricingChange={setShow1mPricing}
+          category={category}
+          onCategoryChange={setCategory}
         />
         <MarketPlace
           search={search}
+          category={category}
           showPricing={displayPricing}
           show1mPricing={show1mPricing}
         />

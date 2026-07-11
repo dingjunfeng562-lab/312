@@ -1,0 +1,79 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: coai-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-chatnio123456}
+      MYSQL_DATABASE: ${MYSQL_DB:-chatnio}
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./database:/docker-entrypoint-initdb.d
+    networks:
+      - coai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: coai-redis
+    restart: always
+    command: redis-server --appendonly yes
+    volumes:
+      - ./redis:/data
+    networks:
+      - coai-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: coai-backend
+    restart: always
+    ports:
+      - "${PORT:-8094}:8094"
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: ${MYSQL_DB:-chatnio}
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-chatnio123456}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SECRET: ${SECRET:-please-change-this-secret-in-production}
+      SERVE_STATIC: "true"
+    volumes:
+      - ./config:/config
+      - ./logs:/logs
+      - ./storage:/storage
+    networks:
+      - coai-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8094/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  coai-network:
+    driver: bridge
+
+volumes:
+  db:
+  redis:

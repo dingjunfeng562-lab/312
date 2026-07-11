@@ -61,6 +61,7 @@ import {
   setCharge,
   syncCharge,
   fetchUpstreamCharge,
+  fetchChannelCharge,
 } from "@/admin/api/charge.ts";
 import { useEffectAsync } from "@/utils/hook.ts";
 import { cn } from "@/components/ui/lib/utils.ts";
@@ -86,6 +87,8 @@ import { formatDecimal } from "@/utils/base.ts";
 import { useDispatch } from "react-redux";
 import { updateSupportModels } from "@/store/chat.ts";
 import { AppDispatch } from "@/store/index.ts";
+import { listChannel } from "@/admin/api/channel.ts";
+import { Channel } from "@/admin/channel.ts";
 
 const initialState: ChargeProps = {
   id: -1,
@@ -167,6 +170,7 @@ type SyncDialogProps = {
   setOpen: (open: boolean) => void;
   onRefresh: () => void | Promise<void>;
   system: string;
+  channelId?: number;
 };
 
 function SyncDialog({
@@ -176,6 +180,7 @@ function SyncDialog({
   setOpen,
   onRefresh,
   system,
+  channelId,
 }: SyncDialogProps) {
   const { t } = useTranslation();
 
@@ -195,13 +200,30 @@ function SyncDialog({
     [overwrite, siteModels, current],
   );
 
+  useEffectAsync(async () => {
+    if (!open || !channelId) return;
+
+    const resp = await fetchChannelCharge(channelId);
+    if (!resp.status || resp.data.length === 0) {
+      toast.error(t("admin.charge.sync-failed"), {
+        description: resp.error || t("admin.charge.sync-channel-empty"),
+      });
+      setOpen(false);
+      return;
+    }
+
+    setSiteCharge(resp.data);
+    setSiteOpen(true);
+    setOpen(false);
+  }, [open, channelId]);
+
   return (
     <>
       <PopupDialog
         type={popupTypes.Number}
         title={t("admin.charge.sync-builtin")}
         name={t("admin.charge.usd-currency")}
-        open={open && builtin}
+        open={open && builtin && !channelId}
         setOpen={setOpen}
         defaultValue={"7.1"}
         onSubmit={async (_currency: string): Promise<boolean> => {
@@ -219,7 +241,7 @@ function SyncDialog({
         title={t("admin.charge.sync")}
         name={t("admin.charge.sync-site")}
         placeholder={t("admin.charge.sync-placeholder")}
-        open={open && !builtin}
+        open={open && !builtin && !channelId}
         setOpen={setOpen}
         defaultValue={"https://api.chatnio.net"}
         alert={system === "" ? t("admin.coai-format-only") : undefined}
@@ -315,9 +337,19 @@ function ChargeAction({
   const [popup, setPopup] = useState(false);
   const [builtin, setBuiltin] = useState(false);
   const [system, setSystem] = useState("");
+  const [channelId, setChannelId] = useState<number>();
+  const [channels, setChannels] = useState<Channel[]>([]);
+
+  useEffectAsync(async () => {
+    const resp = await listChannel();
+    if (resp.status) {
+      setChannels(resp.data.filter((channel: Channel) => channel.models.length > 0));
+    }
+  }, []);
 
   const open = (builtin: boolean) => {
     setBuiltin(builtin);
+    setChannelId(undefined);
     setPopup(true);
   };
 
@@ -330,6 +362,7 @@ function ChargeAction({
         open={popup}
         setOpen={setPopup}
         system={system}
+        channelId={channelId}
       />
       <Button variant={`default`} className={`mr-2`} onClick={() => open(true)}>
         <KanbanSquareDashed className={`w-4 h-4 mr-2`} />
@@ -359,6 +392,33 @@ function ChargeAction({
           >
             NewAPI
           </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant={`outline`}
+            className={`ml-2`}
+            disabled={channels.length === 0}
+          >
+            <Cloud className={`w-4 h-4 mr-2`} />
+            {t("admin.charge.sync-channel")}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={`start`}>
+          {channels.map((channel) => (
+            <DropdownMenuItem
+              key={channel.id}
+              onSelect={() => {
+                setBuiltin(false);
+                setSystem("");
+                setChannelId(channel.id);
+                setPopup(true);
+              }}
+            >
+              {channel.name}
+            </DropdownMenuItem>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
       <div className={`grow`} />

@@ -21,6 +21,20 @@ export type ChargeFetchResponse = CommonResponse & {
   data: ChargeProps[];
 };
 
+export async function fetchChannelCharge(id: number): Promise<ChargeFetchResponse> {
+  try {
+    const response = await axios.get(`/admin/charge/channel/${id}`);
+    const data = response.data as ChargeFetchResponse;
+    return {
+      status: !!data.status,
+      error: data.error,
+      data: data.data || [],
+    };
+  } catch (e) {
+    return { status: false, error: getErrorMessage(e), data: [] };
+  }
+}
+
 export async function listCharge(): Promise<ChargeListResponse> {
   try {
     const response = await axios.get("/admin/charge/list");

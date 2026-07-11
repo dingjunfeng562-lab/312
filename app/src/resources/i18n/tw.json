@@ -125,8 +125,9 @@
     "english-model": "英文模型",
     "badges": {
       "non-billing": "免費",
-      "times-billing": "{{price}} / 次",
-      "token-billing": "輸入 {{input}} / 1k tokens 輸出 {{output}} / 1k tokens",
+      "times-billing": "{{price}} 點數 / 次",
+      "token-billing": "輸入 {{input}} 點數 / 1k tokens 輸出 {{output}} 點數 / 1k tokens",
+      "token-price": "{{price}} 點數",
       "add": "新增工作台",
       "remove": "移除工作台",
       "plan-included": "訂閱包含",
@@ -155,7 +156,9 @@
     "switch-model-desc": "已切換至模型",
     "switch-bookmark": "工作台",
     "remove-bookmark": "已將模型從功能表列移除",
-    "add-bookmark": "已將模型新增至功能表欄"
+    "add-bookmark": "已將模型新增至功能表欄",
+    "unavailable": "模型市場暫未開放",
+    "unavailable-desc": "請等待管理員在後台完成價格設定後再進入模型市場"
   },
   "conversation": {
     "title": "對話",
@@ -418,7 +421,10 @@
     "empty-file-prompt": "檔案內容為空，已自動忽略",
     "parse-success-prompt": "檔案解析成功: {{file}}",
     "uploading": "文件上傳中...",
-    "uploading-prompt": "正在上傳文件中，請耐心等待"
+    "uploading-prompt": "正在上傳文件中，請耐心等待",
+    "unsupported": "不支援的文件",
+    "unsupported-prompt": "{{file}} 不是受支援的文字、PPT、Word、PDF、Excel、圖片、音訊、程式碼或資料文件",
+    "image-model-required-prompt": "目前模型不支援圖片。請選擇支援圖片識別的視覺模型，或在模型設定中啟用 OCR 並設定文件解析服務。"
   },
   "generate": {
     "title": "AI 專案產生器",
@@ -564,8 +570,8 @@
     "invitation": "兌換碼管理",
     "code": "兌換碼",
     "invitation-code": "禮品碼",
-    "invitation-manage": "禮品碼管理",
-    "invitation-tips": "禮品碼用於兌換點數，每一類禮品碼一位使用者只能使用一次（可作宣傳使用）",
+    "invitation-manage": "邀請碼管理",
+    "invitation-tips": "邀請碼可用於註冊並向新使用者發放額度；每個邀請碼只能使用一次。",
     "redeem-tips": "兌換碼用於兌換點數，可用於支付發卡等",
     "quota": "點數",
     "type": "類型",
@@ -598,6 +604,17 @@
     "search-username": "搜尋使用者名稱",
     "password-action": "變更密碼",
     "password-action-desc": "請輸入使用者的新密碼",
+    "username-action": "變更使用者名稱",
+    "username-action-desc": "請輸入新的使用者名稱（2-24 個字元）",
+    "used-quota-action": "設定已用點數",
+    "used-quota-action-desc": "設定使用者累計已使用點數（不可小於 0）",
+    "total-month-action": "設定訂閱月數",
+    "total-month-action-desc": "設定使用者累計訂閱月數（不可小於 0）",
+    "enterprise-action": "設定企業版狀態",
+    "enterprise-action-desc": "設定該使用者是否為企業版使用者",
+    "delete-user-action": "刪除使用者",
+    "delete-user-action-desc": "將永久刪除使用者 {{username}} 及其對話、金鑰、點數和訂閱資料。此操作無法復原。",
+    "delete-user-confirm": "永久刪除",
     "set-admin-action": "設為管理員",
     "set-admin-action-desc": "確定將該使用者設為管理員？",
     "cancel-admin-action": "取消管理員",
@@ -608,12 +625,13 @@
     "unban-action-desc": "確定要解除封鎖該使用者？",
     "email-action": "變更電子郵件",
     "email-action-desc": "請輸入使用者的新電子郵件",
-    "invitation-code-action": "綁定邀請碼",
-    "invitation-code-action-desc": "請輸入使用者註冊使用的邀請碼；留空可解除綁定。",
+    "invitation-code-action": "管理邀請碼",
+    "invitation-code-action-desc": "輸入邀請碼可關聯到此使用者；留空可解除關聯。此操作不會重複發放邀請碼額度。",
     "quota-action": "點數變更",
     "quota-action-desc": "請輸入點數變更值（正數為增加，負數為減少）",
     "quota-set-action": "點數設定",
-    "quota-set-action-desc": "設定使用者的點數",
+    "quota-set-action-desc": "設定使用者的點數（不可小於 0）",
+    "quota-balance": "使用者目前點數：{{quota}}",
     "subscription-action": "訂閱時間管理",
     "subscription-action-desc": "請設定使用者 {{username}} 的訂閱到期時間",
     "release-subscription-action": "釋放訂閱用量",
@@ -691,7 +709,14 @@
       "ocr-model": "OCR 輔助",
       "ocr-model-tip": "如果模型本身不支援圖片輸入，可以開啟OCR 文字辨識以在一定程度上使模型具有視覺能力作為補充(提示：文件解析服務必須支援OCR 服務)",
       "reverse-model": "逆向模型",
-      "reverse-model-tip": "如果逆向工程的模型透過URL 支援全檔案(如PDF, WORD) 解析，可以開啟此選項，所有類型的檔案解析將由上游提供，減少​​Token 消耗。預設不開啟則由本項目解析，適用於大部分模型。請保證文件解析服務已配置外部URL 儲存方案(如S3 / R2 / MinIO 等), 且模型上游支援外部URL 解析檔。"
+      "reverse-model-tip": "如果逆向工程的模型透過URL 支援全檔案(如PDF, WORD) 解析，可以開啟此選項，所有類型的檔案解析將由上游提供，減少​​Token 消耗。預設不開啟則由本項目解析，適用於大部分模型。請保證文件解析服務已配置外部URL 儲存方案(如S3 / R2 / MinIO 等), 且模型上游支援外部URL 解析檔。",
+      "model-channels": "所屬管道",
+      "no-channel": "未配置頻道",
+      "select-all": "全選",
+      "select-model": "選擇模型{{name}}",
+      "batch-delete": "批次刪除（{{count}}）",
+      "select-channel": "按通路商選擇",
+      "channel": "渠道"
     },
     "redeem": {
       "quota": "點數",
@@ -803,7 +828,16 @@
       "first-message-as-user-desc": "某些模型（如DeepSeek）不支援第一則訊息為assistant 角色，開啟此選項可將第一個assistant 角色的訊息轉換為user 角色。",
       "merge-consecutive-user-messages": "合併連續用戶訊息",
       "merge-consecutive-user-messages-tip": "若開啟，連續兩則訊息均為使用者訊息時，將會合併為一則訊息",
-      "merge-consecutive-user-messages-desc": "某些模型（如DeepSeek）不支援連續兩個用戶訊息，開啟此選項可以將連續兩個用戶訊息合併為一則訊息。"
+      "merge-consecutive-user-messages-desc": "某些模型（如DeepSeek）不支援連續兩個用戶訊息，開啟此選項可以將連續兩個用戶訊息合併為一則訊息。",
+      "auto-models": "自動取得上游模型",
+      "auto-models-tip": "儲存管道時自動請求上游 /v1/models，並以實際可用模型更新管道",
+      "auto-price": "自動取得上游價格",
+      "auto-price-tip": "儲存管道時自動請求上游 /v1/charge 並同步計費規則",
+      "price-adjust": "價格調整額",
+      "price-adjust-tip": "正數為加價，負數為減價；同時調整輸入和輸出價格，最低為 0",
+      "price-overwrite": "覆蓋已有價格",
+      "price-overwrite-tip": "開啟後覆蓋本機相同模型的計費規則；關閉時僅新增尚未設定價格的模型",
+      "auto-price-desc": "上游需相容 CoAI /v1/charge 價格介面。價格單位沿用上游規則。"
     },
     "charge": {
       "id": "ID",
@@ -850,7 +884,9 @@
       "add-new-group": "新增用戶群組",
       "new-group-buy-price": "購買倍率",
       "new-group-consume-price": "消費倍率",
-      "new-group-description": "描述"
+      "new-group-description": "描述",
+      "sync-channel": "同步頻道",
+      "sync-channel-empty": "該通路沒有可同步的已選模型價格"
     },
     "system": {
       "general": "一般設定",
@@ -1658,6 +1694,16 @@
     "bindOneAPIStep2": "選擇OpenAI 類型並根據下方存取點、金鑰填寫對應訊息",
     "bindCoAIStep1": "進入後台的頻道管理頁，點選對接上游",
     "bindCoAIStep2": "根據下方存取點、密鑰資訊填寫對應信息"
+  },
+  "code-management": {
+    "invitation-menu": "邀請碼",
+    "gift-menu": "禮品碼",
+    "invitation-title": "邀請碼管理",
+    "gift-title": "禮品碼管理",
+    "invitation-description": "邀請碼供新用戶註冊使用，使用後可向新用戶發放點數。",
+    "gift-description": "禮品碼供已註冊用戶在錢包中兌換點數。",
+    "go-to-gift": "前往禮品碼管理",
+    "go-to-invitation": "前往邀請碼管理"
   },
   "aff": {
     "title": "推廣分成",

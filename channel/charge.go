@@ -3,6 +3,7 @@ package channel
 import (
 	"chat/globals"
 	"chat/utils"
+	"fmt"
 
 	"github.com/spf13/viper"
 )
@@ -19,8 +20,59 @@ func NewChargeManager() *ChargeManager {
 		NonBillingModels: []string{},
 	}
 	m.Load()
+	if m.MigrateChannelPrices(ConduitInstance) {
+		if err := m.SaveConfig(); err != nil {
+			globals.Warn(fmt.Sprintf("[charge] failed to save channel price migration: %s", err.Error()))
+		}
+	}
 
 	return m
+}
+
+func chargeKey(model string, channelId *int) string {
+	if channelId == nil {
+		return model
+	}
+	return fmt.Sprintf("%d:%s", *channelId, model)
+}
+
+func sameChannel(left, right *int) bool {
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
+	return *left == *right
+}
+
+// MigrateChannelPrices expands legacy model-only prices into one rule per
+// channel/model pair. The legacy rule is retained for callers that do not yet
+// know the selected channel and as a fallback for newly added channels.
+func (m *ChargeManager) MigrateChannelPrices(manager *Manager) bool {
+	if manager == nil {
+		return false
+	}
+
+	changed := false
+	legacy := append(ChargeSequence(nil), m.Sequence...)
+	for _, rule := range legacy {
+		if rule == nil || rule.ChannelId != nil {
+			continue
+		}
+		for _, model := range rule.Models {
+			for _, ch := range manager.GetSequence() {
+				if ch == nil || !ch.IsHit(model) || m.GetRuleByModelAndChannel(model, ch.GetId()) != nil {
+					continue
+				}
+				instance := rule.New(model)
+				instance.ChannelId = utils.ToPtr(ch.GetId())
+				m.AddRawRule(instance)
+				changed = true
+			}
+		}
+	}
+	if changed {
+		m.Load()
+	}
+	return changed
 }
 
 func (m *ChargeManager) Load() {
@@ -40,8 +92,9 @@ func (m *ChargeManager) Load() {
 	m.Models = map[string]*Charge{}
 	for _, charge := range m.Sequence {
 		for _, model := range charge.Models {
-			if _, ok := m.Models[model]; !ok {
-				m.Models[model] = charge
+			key := chargeKey(model, charge.ChannelId)
+			if _, ok := m.Models[key]; !ok {
+				m.Models[key] = charge
 			}
 		}
 	}
@@ -69,12 +122,35 @@ func (m *ChargeManager) IsBilling(model string) bool {
 }
 
 func (m *ChargeManager) GetCharge(model string) *Charge {
-	if charge, ok := m.Models[model]; ok {
+	return m.GetChargeByChannel(model, nil)
+}
+
+func (m *ChargeManager) GetChargeByChannel(model string, channelId *int) *Charge {
+	if channelId != nil {
+		if charge, ok := m.Models[chargeKey(model, channelId)]; ok {
+			return charge
+		}
+	}
+	if charge, ok := m.Models[chargeKey(model, nil)]; ok {
 		return charge
 	}
 	for _, charge := range m.Sequence {
-		if charge.Contains(model) {
+		if charge.ChannelId == nil && charge.Contains(model) {
 			return charge
+		}
+	}
+	if channelId == nil {
+		var fallback *Charge
+		for _, charge := range m.Sequence {
+			if charge.ChannelId == nil || !charge.Contains(model) {
+				continue
+			}
+			if fallback == nil || charge.GetLimit() > fallback.GetLimit() {
+				fallback = charge
+			}
+		}
+		if fallback != nil {
+			return fallback
 		}
 	}
 	return &Charge{
@@ -176,7 +252,7 @@ func (m *ChargeManager) SyncRuleWithOverwrite(charge *Charge) {
 	}
 
 	for _, model := range charge.GetModels() {
-		if raw := m.GetRuleByModel(model); raw != nil {
+		if raw := m.GetRuleByModelAndOptionalChannel(model, charge.ChannelId); raw != nil {
 			if len(raw.Models) == 1 {
 				// rule is already exist and only contains this model, just delete it
 
@@ -199,7 +275,7 @@ func (m *ChargeManager) SyncRuleWithOverwrite(charge *Charge) {
 
 func (m *ChargeManager) SyncRuleWithoutOverwrite(charge *Charge) {
 	models := utils.Filter(charge.GetModels(), func(model string) bool {
-		return !m.Contains(model)
+		return !m.ContainsChannel(model, charge.ChannelId)
 	})
 
 	if len(models) > 0 {
@@ -212,9 +288,52 @@ func (m *ChargeManager) ListRules() ChargeSequence {
 	return m.Sequence
 }
 
+// ListActiveRules returns display/API rules without mutating the persisted
+// configuration. Rules belonging to disabled channels are kept in config so
+// they become available again when the channel is re-enabled.
+func (m *ChargeManager) ListActiveRules(manager *Manager) ChargeSequence {
+	if manager == nil {
+		return ChargeSequence{}
+	}
+
+	rules := make(ChargeSequence, 0, len(m.Sequence))
+	for _, rule := range m.Sequence {
+		if rule == nil {
+			continue
+		}
+
+		var models []string
+		if rule.ChannelId != nil {
+			instance := manager.GetSequence().GetChannelById(*rule.ChannelId)
+			if instance == nil || !instance.GetState() {
+				continue
+			}
+			models = utils.Filter(rule.Models, func(model string) bool {
+				return model == "*" || instance.IsHit(model)
+			})
+		} else {
+			models = utils.Filter(rule.Models, func(model string) bool {
+				return model == "*" && len(manager.GetModels()) > 0 || manager.HasChannel(model)
+			})
+		}
+
+		if len(models) == 0 {
+			continue
+		}
+		copy := *rule
+		copy.Models = append([]string(nil), models...)
+		rules = append(rules, &copy)
+	}
+	return rules
+}
+
 func (m *ChargeManager) Contains(model string) bool {
+	return m.ContainsChannel(model, nil)
+}
+
+func (m *ChargeManager) ContainsChannel(model string, channelId *int) bool {
 	for _, item := range m.Sequence {
-		if item.Contains(model) {
+		if sameChannel(item.ChannelId, channelId) && item.Contains(model) {
 			return true
 		}
 	}
@@ -231,8 +350,16 @@ func (m *ChargeManager) GetRule(id int) *Charge {
 }
 
 func (m *ChargeManager) GetRuleByModel(model string) *Charge {
+	return m.GetRuleByModelAndOptionalChannel(model, nil)
+}
+
+func (m *ChargeManager) GetRuleByModelAndChannel(model string, channelId int) *Charge {
+	return m.GetRuleByModelAndOptionalChannel(model, utils.ToPtr(channelId))
+}
+
+func (m *ChargeManager) GetRuleByModelAndOptionalChannel(model string, channelId *int) *Charge {
 	for _, item := range m.Sequence {
-		if item.Contains(model) {
+		if sameChannel(item.ChannelId, channelId) && item.Contains(model) {
 			return item
 		}
 	}
@@ -300,6 +427,7 @@ func (c *Charge) Contains(model string) bool {
 
 func (c *Charge) New(model string) *Charge {
 	return &Charge{
+		ChannelId: c.ChannelId,
 		Type:      c.Type,
 		Models:    []string{model},
 		Input:     c.Input,

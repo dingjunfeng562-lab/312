@@ -34,6 +34,8 @@ type Conversation struct {
 	RepetitionPenalty *float32 `json:"repetition_penalty,omitempty"`
 	VideoSeconds      *string  `json:"seconds,omitempty"`
 	VideoSize         *string  `json:"size,omitempty"`
+	VideoAspectRatio  *string  `json:"aspect_ratio,omitempty"`
+	VideoResolution   *string  `json:"resolution,omitempty"`
 }
 
 type FormMessage struct {
@@ -54,6 +56,8 @@ type FormMessage struct {
 	RepetitionPenalty *float32 `json:"repetition_penalty,omitempty"`
 	Seconds           *string  `json:"seconds,omitempty"`
 	Size              *string  `json:"size,omitempty"`
+	AspectRatio       *string  `json:"aspect_ratio,omitempty"`
+	Resolution        *string  `json:"resolution,omitempty"`
 }
 
 func NewAnonymousConversation() *Conversation {
@@ -209,6 +213,11 @@ func (c *Conversation) SetVideoSize(size *string) {
 	c.VideoSize = size
 }
 
+func (c *Conversation) GetVideoAspectRatio() *string      { return c.VideoAspectRatio }
+func (c *Conversation) SetVideoAspectRatio(value *string) { c.VideoAspectRatio = value }
+func (c *Conversation) GetVideoResolution() *string       { return c.VideoResolution }
+func (c *Conversation) SetVideoResolution(value *string)  { c.VideoResolution = value }
+
 func (c *Conversation) SetContextLength(context int, ignore bool) {
 	if ignore {
 		context = 1
@@ -355,6 +364,8 @@ func (c *Conversation) ApplyParam(form *FormMessage) {
 	c.SetRepetitionPenalty(form.RepetitionPenalty)
 	c.SetVideoSeconds(form.Seconds)
 	c.SetVideoSize(form.Size)
+	c.SetVideoAspectRatio(form.AspectRatio)
+	c.SetVideoResolution(form.Resolution)
 }
 
 func (c *Conversation) AddMessageFromByte(data []byte) (string, error) {

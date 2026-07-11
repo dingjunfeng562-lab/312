@@ -39,6 +39,11 @@ export function lazyFactor<T extends React.ComponentType<any>>(
           resolve(module);
         })
         .catch((error) => {
+          clearTimeout(id);
+          spinnerEvent.emit({
+            id: task,
+            type: closeSpinnerType,
+          });
           console.warn(`[factor] cannot load factor: ${error}`);
           reject(error);
         });

@@ -2,6 +2,7 @@ package admin
 
 import (
 	"chat/admin/analysis"
+	"chat/channel"
 	"chat/utils"
 	"net/http"
 	"strconv"
@@ -34,6 +35,19 @@ type PasswordMigrationForm struct {
 type EmailMigrationForm struct {
 	Id    int64  `json:"id"`
 	Email string `json:"email"`
+}
+
+type UserProfileForm struct {
+	Id         int64    `json:"id" binding:"required"`
+	Username   string   `json:"username" binding:"required"`
+	Email      string   `json:"email"`
+	UsedQuota  *float32 `json:"used_quota" binding:"required"`
+	TotalMonth *int64   `json:"total_month" binding:"required"`
+	Enterprise *bool    `json:"enterprise" binding:"required"`
+}
+
+type DeleteUserForm struct {
+	Id int64 `json:"id" binding:"required"`
 }
 
 type SetAdminForm struct {
@@ -75,7 +89,6 @@ type SetInvitationCodeForm struct {
 	InvitationCode string `json:"invitation_code"`
 }
 
-
 func UpdateMarketAPI(c *gin.Context) {
 	var form MarketModelList
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -86,7 +99,7 @@ func UpdateMarketAPI(c *gin.Context) {
 		return
 	}
 
-	err := MarketInstance.SetModels(form)
+	err := MarketInstance.SetActiveModels(form, channel.ConduitInstance)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status": false,
@@ -101,7 +114,79 @@ func UpdateMarketAPI(c *gin.Context) {
 }
 
 func GetMarketAPI(c *gin.Context) {
-	c.JSON(http.StatusOK, MarketInstance.GetAllModels())
+	expand := c.Query("expand") == "true" // 新增：是否展开为渠道+模型组合
+
+	if !expand {
+		models := MarketInstance.GetAllModels().ActiveChannelModels(channel.ConduitInstance, false)
+		for index := range models {
+			models[index].Channels = nil
+			if models[index].ChannelId != nil {
+				if instance := channel.ConduitInstance.GetSequence().GetChannelById(*models[index].ChannelId); instance != nil {
+					models[index].ChannelName = instance.GetName()
+					models[index].Channels = []string{instance.GetName()}
+				}
+			} else {
+				for _, instance := range channel.ConduitInstance.GetActiveSequence() {
+					if instance.IsHit(models[index].Id) {
+						models[index].Channels = append(models[index].Channels, instance.GetName())
+					}
+				}
+			}
+		}
+		c.JSON(http.StatusOK, models)
+		return
+	}
+
+	// 新逻辑：展开为渠道+模型组合（用于前台展示）
+	expandedModels := MarketModelList{}
+	configModels := MarketInstance.GetAllModels()
+
+	// 遍历所有激活的渠道
+	for _, ch := range channel.ConduitInstance.GetActiveSequence() {
+		// 遍历渠道支持的模型
+		for _, modelId := range ch.GetModels() {
+			// 查找该模型的市场配置
+			var baseModel *MarketModel
+			for i := range configModels {
+				if configModels[i].Id == modelId {
+					baseModel = &configModels[i]
+					break
+				}
+			}
+
+			// 如果没有配置，跳过（不在市场中显示）
+			if baseModel == nil {
+				continue
+			}
+
+			// 检查是否已经有针对该渠道的特定配置
+			hasSpecificConfig := false
+			for i := range configModels {
+				if configModels[i].Id == modelId &&
+					configModels[i].ChannelId != nil &&
+					*configModels[i].ChannelId == ch.Id {
+					// 使用特定配置
+					model := configModels[i]
+					model.ChannelName = ch.GetName()
+					model.Channels = nil
+					expandedModels = append(expandedModels, model)
+					hasSpecificConfig = true
+					break
+				}
+			}
+
+			// 如果没有特定配置，使用基础配置
+			if !hasSpecificConfig {
+				model := *baseModel
+				model.ChannelId = &ch.Id
+				model.ChannelName = ch.GetName()
+				model.Channels = nil
+				expandedModels = append(expandedModels, model)
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, expandedModels)
 }
 
 func InfoAPI(c *gin.Context) {
@@ -233,7 +318,30 @@ func UserPaginationAPI(c *gin.Context) {
 
 	page, _ := strconv.Atoi(c.Query("page"))
 	search := strings.TrimSpace(c.Query("search"))
-	c.JSON(http.StatusOK, getUsersForm(db, int64(page), search))
+	filter := UserFilter{
+		Plan: strings.TrimSpace(c.Query("plan")), Admin: strings.TrimSpace(c.Query("admin")),
+		Ban: strings.TrimSpace(c.Query("ban")), Sort: strings.TrimSpace(c.Query("sort")),
+	}
+	c.JSON(http.StatusOK, getUsersForm(db, int64(page), search, filter))
+}
+
+func UpdateUserProfileAPI(c *gin.Context) {
+	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
+	var form UserProfileForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
+	err := updateUserProfile(db, cache, form.Id, UserProfileUpdate{
+		Username: form.Username, Email: form.Email, UsedQuota: *form.UsedQuota,
+		TotalMonth: *form.TotalMonth, Enterprise: *form.Enterprise,
+	})
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": true})
 }
 
 func UpdatePasswordAPI(c *gin.Context) {
@@ -265,6 +373,7 @@ func UpdatePasswordAPI(c *gin.Context) {
 
 func UpdateEmailAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form EmailMigrationForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -275,7 +384,7 @@ func UpdateEmailAPI(c *gin.Context) {
 		return
 	}
 
-	err := emailMigration(db, form.Id, form.Email)
+	err := emailMigration(db, cache, form.Id, form.Email)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  false,
@@ -291,6 +400,7 @@ func UpdateEmailAPI(c *gin.Context) {
 
 func SetAdminAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form SetAdminForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -301,7 +411,7 @@ func SetAdminAPI(c *gin.Context) {
 		return
 	}
 
-	err := setAdmin(db, form.Id, form.Admin)
+	err := setAdmin(db, cache, form.Id, form.Admin)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  false,
@@ -317,6 +427,7 @@ func SetAdminAPI(c *gin.Context) {
 
 func BanAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form BanForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -327,7 +438,7 @@ func BanAPI(c *gin.Context) {
 		return
 	}
 
-	err := banUser(db, form.Id, form.Ban)
+	err := banUser(db, cache, form.Id, form.Ban)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  false,
@@ -343,6 +454,7 @@ func BanAPI(c *gin.Context) {
 
 func UserQuotaAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form QuotaOperationForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -353,7 +465,7 @@ func UserQuotaAPI(c *gin.Context) {
 		return
 	}
 
-	err := quotaMigration(db, form.Id, *form.Quota, form.Override)
+	quota, err := quotaMigration(db, form.Id, *form.Quota, form.Override)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"status":  false,
@@ -361,14 +473,20 @@ func UserQuotaAPI(c *gin.Context) {
 		})
 		return
 	}
+	if err := clearUserCache(cache); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": true,
+		"quota":  quota,
 	})
 }
 
 func UserSubscriptionAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form SubscriptionOperationForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -395,6 +513,10 @@ func UserSubscriptionAPI(c *gin.Context) {
 		})
 		return
 	}
+	if err := clearUserCache(cache); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status": true,
@@ -403,6 +525,7 @@ func UserSubscriptionAPI(c *gin.Context) {
 
 func SubscriptionLevelAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
 
 	var form SubscriptionLevelForm
 	if err := c.ShouldBindJSON(&form); err != nil {
@@ -419,6 +542,10 @@ func SubscriptionLevelAPI(c *gin.Context) {
 			"status":  false,
 			"message": err.Error(),
 		})
+		return
+	}
+	if err := clearUserCache(cache); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
 		return
 	}
 
@@ -507,7 +634,6 @@ func DeleteLoggerAPI(c *gin.Context) {
 func ConsoleLoggerAPI(c *gin.Context) {
 	n := utils.ParseInt(c.Query("n"))
 
-
 	content := getLatestLogs(n)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -542,3 +668,17 @@ func SetInvitationCodeAPI(c *gin.Context) {
 	})
 }
 
+func DeleteUserAPI(c *gin.Context) {
+	db := utils.GetDBFromContext(c)
+	cache := utils.GetCacheFromContext(c)
+	var form DeleteUserForm
+	if err := c.ShouldBindJSON(&form); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
+	if err := deleteUser(db, cache, form.Id, c.GetString("user")); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "message": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": true})
+}

@@ -186,8 +186,9 @@
     "english-model": "英文模型",
     "badges": {
       "non-billing": "免费",
-      "times-billing": "{{price}} / 次",
-      "token-billing": "输入 {{input}} / 1k tokens 输出 {{output}} / 1k tokens",
+      "times-billing": "{{price}} 点数 / 次",
+      "token-billing": "输入 {{input}} 点数 / 1k tokens 输出 {{output}} 点数 / 1k tokens",
+      "token-price": "{{price}} 点数",
       "add": "添加工作台",
       "remove": "移除工作台",
       "plan-included": "订阅包含",
@@ -216,7 +217,9 @@
     "switch-model-desc": "已切换至模型",
     "switch-bookmark": "工作台",
     "remove-bookmark": "已将模型从菜单栏移除",
-    "add-bookmark": "已将模型添加至菜单栏"
+    "add-bookmark": "已将模型添加至菜单栏",
+    "unavailable": "模型市场暂未开放",
+    "unavailable-desc": "请等待管理员在后台完成价格设定后再进入模型市场"
   },
   "conversation": {
     "title": "对话",
@@ -547,7 +550,7 @@
   "file": {
     "file": "文件",
     "upload": "上传",
-    "type": "支持 pdf, docx, pptx, xlsx, 图像, 文本等格式",
+    "type": "支持文本、PPT、Word、PDF、Excel、图片、音频、代码和数据文件",
     "drop": "拖拽文件到此处或点击上传",
     "parse-error": "解析失败",
     "parse-error-prompt": "文件解析失败：{{reason}}",
@@ -556,6 +559,9 @@
     "max-length-prompt": "由于上下文长度限制，内容已被截取",
     "over-size": "文件过大",
     "over-size-prompt": "单个附件大小不能超过 {{size}} MB",
+    "unsupported": "不支持的文件",
+    "unsupported-prompt": "{{file}} 不是受支持的文本、PPT、Word、PDF、Excel、图片、音频、代码或数据文件",
+    "image-model-required-prompt": "当前模型不支持图片。请选择支持图片识别的视觉模型，或在模型设置中启用 OCR 并配置文件解析服务。",
     "uploading": "文件上传中...",
     "uploading-prompt": "正在上传文件中，请耐心等待",
     "large-file": "大文件解析",
@@ -763,8 +769,8 @@
     "invitation": "兑换码管理",
     "code": "兑换码",
     "invitation-code": "礼品码",
-    "invitation-manage": "礼品码管理",
-    "invitation-tips": "礼品码用于兑换点数，每一类礼品码一个用户只能使用一次（可作宣传使用）",
+    "invitation-manage": "邀请码管理",
+    "invitation-tips": "邀请码可用于注册并向新用户发放额度；每个邀请码只能使用一次。",
     "redeem-tips": "兑换码用于兑换点数，可用于支付发卡等",
     "quota": "点数",
     "type": "类型",
@@ -798,6 +804,17 @@
     "search-username": "搜索用户名",
     "password-action": "修改密码",
     "password-action-desc": "请输入用户的新密码",
+    "username-action": "修改用户名",
+    "username-action-desc": "请输入新的用户名（2-24 个字符）",
+    "used-quota-action": "设置已用点数",
+    "used-quota-action-desc": "设置用户累计已使用的点数（不可小于 0）",
+    "total-month-action": "设置订阅月数",
+    "total-month-action-desc": "设置用户累计订阅月数（不可小于 0）",
+    "enterprise-action": "设置企业版状态",
+    "enterprise-action-desc": "设置该用户是否为企业版用户",
+    "delete-user-action": "删除用户",
+    "delete-user-action-desc": "将永久删除用户 {{username}} 及其会话、密钥、额度和订阅数据。此操作不可撤销。",
+    "delete-user-confirm": "永久删除",
     "set-admin-action": "设为管理员",
     "set-admin-action-desc": "确定将该用户设为管理员？",
     "cancel-admin-action": "取消管理员",
@@ -808,8 +825,8 @@
     "unban-action-desc": "确定将该用户解封？",
     "email-action": "修改邮箱",
     "email-action-desc": "请输入用户的新邮箱",
-    "invitation-code-action": "绑定邀请码",
-    "invitation-code-action-desc": "请输入用户注册使用的邀请码；留空可解除绑定。",
+    "invitation-code-action": "管理邀请码",
+    "invitation-code-action-desc": "输入邀请码可关联到该用户；留空可解除关联。此操作不会重复发放邀请码额度。",
     "group": "分组",
     "group-setting": "分组设置",
     "custom-group": "自定义分组",
@@ -818,7 +835,8 @@
     "quota-action": "点数变更",
     "quota-action-desc": "请输入点数变更值（正数为增加，负数为减少）",
     "quota-set-action": "点数设置",
-    "quota-set-action-desc": "设置用户的点数",
+    "quota-set-action-desc": "设置用户的点数（不可小于 0）",
+    "quota-balance": "用户当前点数：{{quota}}",
     "subscription-action": "订阅时间管理",
     "subscription-action-desc": "请设置用户 {{username}} 的订阅到期时间",
     "release-subscription-action": "释放订阅用量",
@@ -877,6 +895,11 @@
     },
     "market": {
       "title": "模型市场",
+      "select-all": "全选",
+      "select-model": "选择模型 {{name}}",
+      "batch-delete": "批量删除（{{count}}）",
+      "select-channel": "按渠道商选择",
+      "channel": "渠道",
       "model-name": "模型名称",
       "not-use": "部分模型未使用",
       "import-all": "导入全部",
@@ -884,6 +907,8 @@
       "model-name-placeholder": "请输入模型昵称 （如：GPT-4）",
       "model-id": "模型 ID",
       "model-id-placeholder": "请输入模型 ID （如：gpt-4-0613）",
+      "model-channels": "所属渠道",
+      "no-channel": "未配置渠道",
       "model-description": "模型简介",
       "model-description-placeholder": "请输入模型简介",
       "model-enabled": "允许调用",
@@ -1035,7 +1060,16 @@
       "first-message-as-user-desc": "某些模型（如 DeepSeek）不支持第一条消息为 assistant 角色，开启此选项可以将第一条 assistant 角色的消息转换为 user 角色。",
       "merge-consecutive-user-messages": "合并连续用户消息",
       "merge-consecutive-user-messages-tip": "如果开启，当连续两条消息均为用户消息时，将被合并为一条消息",
-      "merge-consecutive-user-messages-desc": "某些模型（如 DeepSeek）不支持连续两条用户消息，开启此选项可以将连续两条用户消息合并为一条消息。"
+      "merge-consecutive-user-messages-desc": "某些模型（如 DeepSeek）不支持连续两条用户消息，开启此选项可以将连续两条用户消息合并为一条消息。",
+      "auto-models": "自动获取上游模型",
+      "auto-models-tip": "保存渠道时自动请求上游 /v1/models，并用实际可用模型更新渠道",
+      "auto-price": "自动获取上游价格",
+      "auto-price-tip": "保存渠道时自动请求上游 /v1/charge 并同步计费规则",
+      "price-adjust": "价格调整额",
+      "price-adjust-tip": "正数为加价，负数为减价；会同时调整输入和输出价格，最低为 0",
+      "price-overwrite": "覆盖已有价格",
+      "price-overwrite-tip": "开启后覆盖本地相同模型的计费规则；关闭时仅添加尚未设置价格的模型",
+      "auto-price-desc": "上游需兼容 CoAI /v1/charge 价格接口。价格单位沿用上游规则，保存渠道失败时会显示具体错误。"
     },
     "charge": {
       "id": "ID",
@@ -1068,6 +1102,8 @@
       "sync-overwrite": "覆盖已有规则",
       "sync-confirm": "确认同步",
       "sync-builtin": "应用内置价格",
+      "sync-channel": "同步渠道",
+      "sync-channel-empty": "该渠道没有可同步的已选模型价格",
       "group-pricing": "用户组定价比例",
       "new-group": "用户组 ID",
       "new-group-price": "价格",
@@ -1232,7 +1268,7 @@
       "epayAggregation": "聚合支付模式",
       "epayAggregationTip": "聚合支付模式，开启后点击将不会选择支付方式 **直接跳转至聚合支付页面**\n请确保您的易支付支持聚合支付模式",
       "stripeTitle": "Stripe",
-      "stripeTip":"Stripe 是一种广泛使用的国际在线支付系统，支持多种支付方式，包括信用卡、借记卡、Apple Pay、Google Pay等。它为用户提供了安全、便捷的支付体验，特别适合需要处理国际支付的业务。",
+      "stripeTip": "Stripe 是一种广泛使用的国际在线支付系统，支持多种支付方式，包括信用卡、借记卡、Apple Pay、Google Pay等。它为用户提供了安全、便捷的支付体验，特别适合需要处理国际支付的业务。",
       "stripeEnabled": "启用 Stripe",
       "stripeSecretKey": "Stripe Secret Key",
       "stripeSecretKeyPlaceholder": "请输入 Stripe Secret Key",
@@ -1389,13 +1425,13 @@
           "title": "CoAI Pro",
           "description": "CoAI Pro 商业版授权，解锁对接多种支付渠道、用户（组）倍率控制、内容审核、会话日志等全部商业功能"
         },
-        "multiKey": { 
+        "multiKey": {
           "title": "多令牌管理",
           "description": "多 API KEY 管理, 支持一单元内多令牌分发管理, 支持设置可调用模型，余额限制，调用日志，状态管理，对接指南等高级功能"
         },
         "stripe": {
           "title": "Stripe 支付",
-            "description": "Stripe Hosted Checkout 高级支付模块，支持 Stripe 银行卡/Bank/Link/微信/Alipay+ 等几十余种支付对接，支持多种货币支付"
+          "description": "Stripe Hosted Checkout 高级支付模块，支持 Stripe 银行卡/Bank/Link/微信/Alipay+ 等几十余种支付对接，支持多种货币支付"
         },
         "paypal": {
           "title": "PayPal 支付",
@@ -1649,6 +1685,16 @@
     "bindOneAPIStep2": "选择 OpenAI 类型并根据下方接入点、密钥填写对应信息",
     "bindCoAIStep1": "进入后台的渠道管理页，点击对接上游",
     "bindCoAIStep2": "根据下方接入点、密钥信息填写对应信息"
+  },
+  "code-management": {
+    "invitation-menu": "邀请码",
+    "gift-menu": "礼品码",
+    "invitation-title": "邀请码管理",
+    "gift-title": "礼品码管理",
+    "invitation-description": "邀请码用于新用户注册，使用后可为新用户发放点数。",
+    "gift-description": "礼品码用于已注册用户在钱包中兑换点数。",
+    "go-to-gift": "前往礼品码管理",
+    "go-to-invitation": "前往邀请码管理"
   },
   "aff": {
     "title": "推广分成",

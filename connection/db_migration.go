@@ -11,12 +11,23 @@ func validSqlError(err error) bool {
 		return false
 	}
 
-	content := err.Error()
+	content := strings.ToLower(err.Error())
 
-	// Error 1060: Duplicate column name
-	// Error 1050: Table already exists
+	// Migrations are intentionally rerun on startup. Treat duplicate schema
+	// objects as already applied for both MySQL and SQLite.
+	ignored := []string{
+		"error 1060",            // MySQL: duplicate column name
+		"error 1050",            // MySQL: table already exists
+		"duplicate column name", // SQLite
+		"already exists",        // SQLite/MySQL schema object
+	}
+	for _, marker := range ignored {
+		if strings.Contains(content, marker) {
+			return false
+		}
+	}
 
-	return !(strings.Contains(content, "Error 1060") || strings.Contains(content, "Error 1050"))
+	return true
 }
 
 func checkSqlError(_ sql.Result, err error) error {

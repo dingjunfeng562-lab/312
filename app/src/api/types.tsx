@@ -73,6 +73,8 @@ export type Message = {
 
 export type Model = {
   id: string;
+  channel_id?: number;
+  channel_name?: string;
   name: string;
   description?: string;
   enabled?: boolean;
@@ -89,9 +91,18 @@ export type Model = {
   thinking_model?: boolean;
   avatar: string;
   tag?: string[];
+  channels?: string[];
 
   price?: ChargeBaseProps;
 };
+
+export function getModelEntryKey(
+  model: Pick<Model, "id" | "channel_id">,
+): string {
+  return model.channel_id === undefined
+    ? model.id
+    : `${model.channel_id}:${model.id}`;
+}
 
 export type Id = number;
 

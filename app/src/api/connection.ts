@@ -71,6 +71,8 @@ export type ChatProps = {
   repetition_penalty?: number;
   seconds?: string;
   size?: string;
+  aspect_ratio?: string;
+  resolution?: string;
 };
 
 type StreamCallback = (id: number, message: StreamMessage) => void;

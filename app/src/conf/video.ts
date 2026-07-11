@@ -1,5 +1,5 @@
-export type VideoAspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4";
-export type VideoDuration = "4" | "5" | "8" | "10" | "12" | "15" | "16" | "20" | "30" | "60";
+export type VideoAspectRatio = "16:9" | "9:16" | "1:1" | "4:3" | "3:4" | "3:2" | "2:3";
+export type VideoDuration = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12" | "13" | "14" | "15" | "16" | "20" | "30" | "60";
 export type VideoResolution = "480p" | "720p" | "1024p" | "1080p" | "4k";
 
 export type VideoSettingsValue = {
@@ -44,6 +44,13 @@ const soraProVideoCapabilities: VideoCapabilities = {
   resolutions: ["720p", "1024p", "1080p"],
 };
 
+const grokImagine15VideoCapabilities: VideoCapabilities = {
+  aspectRatios: ["16:9", "9:16", "1:1", "3:2", "2:3"],
+  durations: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
+  resolutions: ["480p", "720p"],
+  defaults: { aspectRatio: "16:9", duration: "5", resolution: "720p" },
+};
+
 const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
   "480p": {
     "16:9": "854x480",
@@ -51,6 +58,8 @@ const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
     "1:1": "480x480",
     "4:3": "640x480",
     "3:4": "480x640",
+    "3:2": "720x480",
+    "2:3": "480x720",
   },
   "720p": {
     "16:9": "1280x720",
@@ -58,6 +67,8 @@ const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
     "1:1": "720x720",
     "4:3": "960x720",
     "3:4": "720x960",
+    "3:2": "1080x720",
+    "2:3": "720x1080",
   },
   "1024p": {
     "16:9": "1792x1024",
@@ -65,6 +76,8 @@ const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
     "1:1": "1024x1024",
     "4:3": "1365x1024",
     "3:4": "1024x1365",
+    "3:2": "1536x1024",
+    "2:3": "1024x1536",
   },
   "1080p": {
     "16:9": "1920x1080",
@@ -72,6 +85,8 @@ const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
     "1:1": "1080x1080",
     "4:3": "1440x1080",
     "3:4": "1080x1440",
+    "3:2": "1620x1080",
+    "2:3": "1080x1620",
   },
   "4k": {
     "16:9": "3840x2160",
@@ -79,15 +94,26 @@ const videoSizes: Record<VideoResolution, Record<VideoAspectRatio, string>> = {
     "1:1": "2160x2160",
     "4:3": "2880x2160",
     "3:4": "2160x2880",
+    "3:2": "3240x2160",
+    "2:3": "2160x3240",
   },
 };
 
 export const videoDurationOptions: Record<VideoDuration, string> = {
+  "1": "1s",
+  "2": "2s",
+  "3": "3s",
   "4": "4s",
   "5": "5s",
+  "6": "6s",
+  "7": "7s",
   "8": "8s",
+  "9": "9s",
   "10": "10s",
+  "11": "11s",
   "12": "12s",
+  "13": "13s",
+  "14": "14s",
   "15": "15s",
   "16": "16s",
   "20": "20s",
@@ -106,6 +132,7 @@ export const videoResolutionOptions: Record<VideoResolution, string> = {
 export function getVideoCapabilities(model: string): VideoCapabilities {
   const normalized = model.toLowerCase().trim();
 
+  if (/grok-imagine-video-1\.5-preview/.test(normalized)) return grokImagine15VideoCapabilities;
   if (/sora-2-pro/.test(normalized)) return soraProVideoCapabilities;
   if (/sora-2|sora/.test(normalized)) return soraVideoCapabilities;
 
@@ -141,11 +168,13 @@ export function getVideoSize(
 export function getVideoRequestSettings(
   model: string,
   settings: VideoSettingsValue,
-): { seconds: string; size: string } {
+): { seconds: string; size: string; aspect_ratio: VideoAspectRatio; resolution: VideoResolution } {
   const normalized = normalizeVideoSettings(model, settings);
 
   return {
     seconds: normalized.duration,
     size: getVideoSize(normalized.resolution, normalized.aspectRatio),
+    aspect_ratio: normalized.aspectRatio,
+    resolution: normalized.resolution,
   };
 }

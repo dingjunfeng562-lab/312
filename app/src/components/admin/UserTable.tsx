@@ -8,6 +8,7 @@ import {
 } from "@/admin/types.ts";
 import {
   banUserOperation,
+  deleteUserOperation,
   getUserList,
   initialUserFilter,
   quotaOperation,
@@ -18,6 +19,7 @@ import {
   subscriptionOperation,
   updateEmail,
   updatePassword,
+  updateUserProfile,
   UserFilterProps,
 } from "@/admin/api/chart.ts";
 import { useEffectAsync } from "@/utils/hook.ts";
@@ -56,9 +58,14 @@ import {
   Shield,
   ShieldMinus,
   Ticket,
+  Trash2,
+  UserRoundCog,
 } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
-import PopupDialog, { popupTypes } from "@/components/PopupDialog.tsx";
+import PopupDialog, {
+  PopupAlertDialog,
+  popupTypes,
+} from "@/components/PopupDialog.tsx";
 import { getNumber, isEnter, parseNumber } from "@/utils/base.ts";
 import { useSelector } from "react-redux";
 import { selectUsername } from "@/store/auth.ts";
@@ -117,7 +124,11 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
   const username = useSelector(selectUsername);
 
   const [passwordOpen, setPasswordOpen] = useState<boolean>(false);
+  const [usernameOpen, setUsernameOpen] = useState<boolean>(false);
   const [emailOpen, setEmailOpen] = useState<boolean>(false);
+  const [usedQuotaOpen, setUsedQuotaOpen] = useState<boolean>(false);
+  const [totalMonthOpen, setTotalMonthOpen] = useState<boolean>(false);
+  const [enterpriseOpen, setEnterpriseOpen] = useState<boolean>(false);
   const [quotaOpen, setQuotaOpen] = useState<boolean>(false);
   const [quotaSetOpen, setQuotaSetOpen] = useState<boolean>(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState<boolean>(false);
@@ -127,9 +138,38 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
   const [banOpen, setBanOpen] = useState<boolean>(false);
   const [adminOpen, setAdminOpen] = useState<boolean>(false);
   const [invitationOpen, setInvitationOpen] = useState<boolean>(false);
+  const [deleteOpen, setDeleteOpen] = useState<boolean>(false);
+
+  async function updateProfile(changes: Partial<UserData>) {
+    const resp = await updateUserProfile({
+      id: user.id,
+      username: changes.username ?? user.username,
+      email: changes.email ?? user.email,
+      used_quota: changes.used_quota ?? user.used_quota,
+      total_month: changes.total_month ?? user.total_month,
+      enterprise: changes.enterprise ?? user.enterprise,
+    });
+    doToast(t, resp);
+    if (resp.status) onRefresh?.();
+    return resp.status;
+  }
 
   return (
     <>
+      <PopupDialog
+        type={popupTypes.Text}
+        title={t("admin.username-action")}
+        name={t("admin.username")}
+        description={t("admin.username-action-desc")}
+        open={usernameOpen}
+        setOpen={setUsernameOpen}
+        defaultValue={user.username}
+        onSubmit={async (value) => {
+          const status = await updateProfile({ username: value.trim() });
+          if (status && username === user.username) location.reload();
+          return status;
+        }}
+      />
       <PopupDialog
         destructive={true}
         type={popupTypes.Text}
@@ -152,6 +192,40 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
         }}
       />
       <PopupDialog
+        type={popupTypes.Number}
+        title={t("admin.used-quota-action")}
+        name={t("admin.used-quota")}
+        description={t("admin.used-quota-action-desc")}
+        open={usedQuotaOpen}
+        setOpen={setUsedQuotaOpen}
+        defaultValue={user.used_quota.toString()}
+        onValueChange={getNumber}
+        componentProps={{ acceptNegative: false, min: 0 }}
+        onSubmit={(value) => updateProfile({ used_quota: parseNumber(value) })}
+      />
+      <PopupDialog
+        type={popupTypes.Number}
+        title={t("admin.total-month-action")}
+        name={t("admin.total-month")}
+        description={t("admin.total-month-action-desc")}
+        open={totalMonthOpen}
+        setOpen={setTotalMonthOpen}
+        defaultValue={user.total_month.toString()}
+        onValueChange={getNumber}
+        componentProps={{ acceptNegative: false, min: 0, step: 1 }}
+        onSubmit={(value) => updateProfile({ total_month: Math.trunc(parseNumber(value)) })}
+      />
+      <PopupDialog
+        type={popupTypes.Switch}
+        title={t("admin.enterprise-action")}
+        name={t("admin.enterprise")}
+        description={t("admin.enterprise-action-desc")}
+        open={enterpriseOpen}
+        setOpen={setEnterpriseOpen}
+        defaultValue={user.enterprise.toString()}
+        onSubmit={(value) => updateProfile({ enterprise: value === "true" })}
+      />
+      <PopupDialog
         destructive={true}
         type={popupTypes.Text}
         title={t("admin.email-action")}
@@ -164,6 +238,23 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
           const resp = await updateEmail(user.id, email);
           doToast(t, resp);
 
+          if (resp.status) onRefresh?.();
+          return resp.status;
+        }}
+      />
+      <PopupAlertDialog
+        destructive
+        disabled={username === user.username}
+        title={t("admin.delete-user-action")}
+        description={t("admin.delete-user-action-desc", {
+          username: user.username,
+        })}
+        confirmLabel={t("admin.delete-user-confirm")}
+        open={deleteOpen}
+        setOpen={setDeleteOpen}
+        onSubmit={async () => {
+          const resp = await deleteUserOperation(user.id);
+          doToast(t, resp);
           if (resp.status) onRefresh?.();
           return resp.status;
         }}
@@ -183,7 +274,10 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
           const resp = await quotaOperation(user.id, quota);
           doToast(t, resp);
 
-          if (resp.status) onRefresh?.();
+          if (resp.status) {
+            toast.info(t("admin.quota-balance", { quota: resp.quota }));
+            onRefresh?.();
+          }
           return resp.status;
         }}
       />
@@ -196,13 +290,16 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
         onValueChange={getNumber}
         open={quotaSetOpen}
         setOpen={setQuotaSetOpen}
-        componentProps={{ acceptNegative: true }}
+        componentProps={{ acceptNegative: false, min: 0 }}
         onSubmit={async (value) => {
           const quota = parseNumber(value);
           const resp = await quotaOperation(user.id, quota, true);
           doToast(t, resp);
 
-          if (resp.status) onRefresh?.();
+          if (resp.status) {
+            toast.info(t("admin.quota-balance", { quota: resp.quota }));
+            onRefresh?.();
+          }
           return resp.status;
         }}
       />
@@ -228,7 +325,7 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
         title={t("admin.subscription-level")}
         name={t("admin.level")}
         description={t("admin.subscription-level-desc")}
-        defaultValue={userTypeArray[user.level]}
+        defaultValue={userTypeArray[user.level] || UserType.normal}
         params={{
           dataList: userTypeArray,
           dataListTranslated: "admin.identity",
@@ -328,6 +425,10 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className={`min-w-[8.75rem]`}>
+          <DropdownMenuItem onClick={() => setUsernameOpen(true)}>
+            <UserRoundCog className={`h-4 w-4 mr-2`} />
+            {t("admin.username-action")}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setPasswordOpen(true)}>
             <KeyRound className={`h-4 w-4 mr-2`} />
             {t("admin.password-action")}
@@ -370,6 +471,10 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
             <CloudCog className={`h-4 w-4 mr-2`} />
             {t("admin.quota-set-action")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setUsedQuotaOpen(true)}>
+            <CloudFog className={`h-4 w-4 mr-2`} />
+            {t("admin.used-quota-action")}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setSubscriptionOpen(true)}>
             <CalendarClock className={`h-4 w-4 mr-2`} />
             {t("admin.subscription-action")}
@@ -378,9 +483,25 @@ function OperationMenu({ user, onRefresh }: OperationMenuProps) {
             <CalendarCheck2 className={`h-4 w-4 mr-2`} />
             {t("admin.subscription-level")}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTotalMonthOpen(true)}>
+            <CalendarPlus className={`h-4 w-4 mr-2`} />
+            {t("admin.total-month-action")}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setEnterpriseOpen(true)}>
+            <CloudCog className={`h-4 w-4 mr-2`} />
+            {t("admin.enterprise-action")}
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setReleaseOpen(true)}>
             <CalendarOff className={`h-4 w-4 mr-2`} />
             {t("admin.release-subscription-action")}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className={`text-destructive focus:text-destructive`}
+            disabled={username === user.username}
+            onClick={() => setDeleteOpen(true)}
+          >
+            <Trash2 className={`h-4 w-4 mr-2`} />
+            {t("admin.delete-user-action")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -552,6 +673,7 @@ function UserTable() {
                 <TableHead>{t("admin.is-subscribed")}</TableHead>
                 <TableHead>{t("admin.level")}</TableHead>
                 <TableHead>{t("admin.total-month")}</TableHead>
+                <TableHead>{t("admin.enterprise")}</TableHead>
                 <TableHead>{t("admin.expired-at")}</TableHead>
                 <TableHead>{t("admin.is-banned")}</TableHead>
                 <TableHead>{t("admin.is-admin")}</TableHead>
@@ -582,10 +704,15 @@ function UserTable() {
                   </TableCell>
                   <TableCell className={`whitespace-nowrap`}>
                     <Badge variant={`outline`}>
-                      {t(`admin.identity.${userTypeArray[user.level]}`)}
+                      {t(
+                        `admin.identity.${
+                          userTypeArray[user.level] || UserType.normal
+                        }`,
+                      )}
                     </Badge>
                   </TableCell>
                   <TableCell>{user.total_month}</TableCell>
+                  <TableCell>{t(user.enterprise.toString())}</TableCell>
                   <TableCell className={`whitespace-nowrap`}>
                     {user.expired_at || "-"}
                   </TableCell>

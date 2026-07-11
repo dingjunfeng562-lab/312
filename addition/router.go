@@ -3,6 +3,7 @@ package addition
 import (
 	"chat/addition/article"
 	"chat/addition/card"
+	fileparser "chat/addition/file"
 	"chat/addition/generation"
 	"github.com/gin-gonic/gin"
 )
@@ -10,6 +11,7 @@ import (
 func Register(app *gin.RouterGroup) {
 	{
 		app.POST("/card", card.HandlerAPI)
+		app.POST("/file/upload", fileparser.UploadAPI)
 
 		app.GET("/generation/create", generation.GenerateAPI)
 		app.GET("/generation/download/tar", generation.ProjectTarDownloadAPI)

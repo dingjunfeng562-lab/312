@@ -109,16 +109,6 @@ function Login() {
         description: t("login-success-prompt"),
       });
 
-      if (
-        form.username.trim() === "root" &&
-        form.password.trim() === "coai123456"
-      ) {
-        toast.warning(t("admin.default-password"), {
-          description: t("admin.default-password-prompt"),
-          duration: 15000,
-        });
-      }
-
       validateToken(globalDispatch, resp.token);
       await router.navigate("/");
     } catch (err) {

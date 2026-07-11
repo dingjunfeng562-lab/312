@@ -102,11 +102,19 @@ func createChatTask(
 		}()
 
 		if globals.IsVideoModel(model) {
+			prompt, images := utils.ExtractImages(segment[len(segment)-1].Content, true)
+			var inputReference *string
+			if len(images) > 0 {
+				inputReference = utils.ToPtr(strings.TrimRight(images[0], ")]}>\"'"))
+			}
 			props := adaptercommon.CreateVideoProps(&adaptercommon.VideoProps{
-				Model:   model,
-				Prompt:  segment[len(segment)-1].Content,
-				Seconds: instance.GetVideoSeconds(),
-				Size:    instance.GetVideoSize(),
+				Model:          model,
+				Prompt:         strings.TrimSpace(prompt),
+				Seconds:        instance.GetVideoSeconds(),
+				Size:           instance.GetVideoSize(),
+				AspectRatio:    instance.GetVideoAspectRatio(),
+				Resolution:     instance.GetVideoResolution(),
+				InputReference: inputReference,
 			})
 			props.User = auth.GetUsernameString(db, user)
 
@@ -122,8 +130,11 @@ func createChatTask(
 
 							job, err := utils.UnmarshalString[RelayVideoJob](data.Content)
 							if err == nil && job.Id != "" && job.Status == "completed" {
-								backendUrl := channel.SystemInstance.GetBackend()
-								videoUrl := fmt.Sprintf("%s/v1/videos/%s/content", backendUrl, job.Id)
+								videoUrl := job.Url
+								if videoUrl == "" {
+									backendUrl := channel.SystemInstance.GetBackend()
+									videoUrl = fmt.Sprintf("%s/v1/videos/%s/content", backendUrl, job.Id)
+								}
 								videoMarkdown := utils.GetVideoMarkdown(videoUrl, "video")
 
 								chunkChan <- partialChunk{Chunk: &globals.Chunk{Content: videoMarkdown}, End: false, Hit: false, Error: nil}

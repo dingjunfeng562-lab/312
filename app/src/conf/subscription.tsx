@@ -1,32 +1,33 @@
 import { Plan, Plans } from "@/api/types.tsx";
 
+// 订阅功能已移除，保留此文件以保持兼容性
+
 export const subscriptionType: Record<number, string> = {
   1: "basic",
   2: "standard",
   3: "pro",
 };
 
-export function getPlan(data: Plans, level: number): Plan {
-  const raw = data.filter((item) => item.level === level);
-  return raw.length > 0 ? raw[0] : { level: 0, price: 0, items: [] };
+export function getPlan(_data: Plans, _level: number): Plan {
+  return { level: 0, price: 0, items: [] };
 }
 
-export function getPlanModels(data: Plans, level: number): string[] {
-  return getPlan(data, level).items.flatMap((item) => item.models);
+export function getPlanModels(_data: Plans, _level: number): string[] {
+  return [];
 }
 
 export function includingModelFromPlan(
-  data: Plans,
-  level: number,
-  model: string,
+  _data: Plans,
+  _level: number,
+  _model: string,
 ): boolean {
-  return getPlanModels(data, level).includes(model);
+  return false;
 }
 
-export function getPlanPrice(data: Plans, level: number): number {
-  return getPlan(data, level).price;
+export function getPlanPrice(_data: Plans, _level: number): number {
+  return 0;
 }
 
-export function getPlanName(level: number): string {
-  return subscriptionType[level] || "none";
+export function getPlanName(_level: number): string {
+  return "none";
 }

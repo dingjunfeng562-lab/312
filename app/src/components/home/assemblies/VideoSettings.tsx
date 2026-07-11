@@ -99,19 +99,33 @@ export function VideoSettings() {
       })),
     [capabilities],
   );
+  const supportSummary = useMemo(() => {
+    const durationValues = capabilities.durations.map(Number);
+    const isContinuous = durationValues.every(
+      (value, index) => index === 0 || value === durationValues[index - 1] + 1,
+    );
+    const durationText = isContinuous && durationValues.length > 1
+      ? `${durationValues[0]}\u2013${durationValues[durationValues.length - 1]}s`
+      : capabilities.durations.map((value) => `${value}s`).join("/");
+
+    return `\u652f\u6301\uff1a\u5206\u8fa8\u7387 ${capabilities.resolutions.join("\u3001")}\uff1b\u6bd4\u4f8b ${capabilities.aspectRatios.join("\u3001")}\uff1b\u79d2\u6570 ${durationText}`;
+  }, [capabilities]);
 
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <div>
-          <ChatAction
-            active
-            text={t("chat.video-settings")}
-          >
-            <Icon
-              icon={<Video className="h-4 w-4 text-violet-500" />}
-            />
-          </ChatAction>
+        <div className="flex max-w-full flex-wrap items-center gap-2 rounded-md border border-violet-500/20 bg-violet-500/5 pr-2 text-xs text-muted-foreground">
+          <div className="flex shrink-0 items-center gap-1">
+            <ChatAction active text={t("chat.video-settings")}>
+              <Icon icon={<Video className="h-4 w-4 text-violet-500" />} />
+            </ChatAction>
+            <span className="whitespace-nowrap">
+              {`\u5f53\u524d\uff1a${videoResolutionOptions[resolution]} \u00b7 ${aspectRatio} \u00b7 ${duration}s`}
+            </span>
+          </div>
+          <span className="min-w-0 whitespace-normal border-l border-violet-500/20 pl-2" title={supportSummary}>
+            {supportSummary}
+          </span>
         </div>
       </PopoverTrigger>
       <PopoverContent
@@ -129,6 +143,12 @@ export function VideoSettings() {
               </span>
             </div>
           </div>
+
+          {/grok-imagine-video-1\.5-preview/i.test(model) && (
+            <p className="rounded-md bg-muted/60 px-2.5 py-2 text-xs text-muted-foreground">
+              仅支持图生视频，请上传 1 张可公开访问的首帧图片。
+            </p>
+          )}
 
           {/* Aspect Ratio */}
           <div className="space-y-2">

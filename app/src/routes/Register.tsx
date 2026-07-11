@@ -142,13 +142,6 @@ function Verify({ form, dispatch, setNext }: CompProps) {
 
     if (!isEmailValid(data.email)) return;
     if (mail && data.code.trim().length === 0) return;
-    if (data.invitation_code.trim().length === 0) {
-      toast.error(t("error"), {
-        description: t("auth.invitation-code-required"),
-      });
-      return;
-    }
-
     const resp = await doRegister(data);
     if (!resp.status) {
       toast.error(t("error"), {
@@ -217,7 +210,7 @@ function Verify({ form, dispatch, setNext }: CompProps) {
       </div>
 
       <Label>
-        <Require /> {t("auth.invitation-code")}
+        {t("auth.invitation-code")}
       </Label>
       <Input
         placeholder={t("auth.invitation-code-placeholder")}

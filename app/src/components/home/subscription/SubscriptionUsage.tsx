@@ -1,44 +1,12 @@
-import { ValuableProgress } from "@/components/ui/progress.tsx";
+// 订阅功能已移除，保留此组件以保持兼容性
 
 type UsageProps = {
   name: string;
-  usage: {
-    used: number;
-    total: number;
-  };
+  usage: any;
 };
 
-function SubscriptionUsage({ name, usage }: UsageProps) {
-  if (!usage) return null;
-
-  const isInfinity = usage.total === -1;
-
-  const used = usage.used;
-  const total = isInfinity ? "∞" : usage.total;
-
-  return (
-    <div className={`sub-column-wrapper inline-flex flex-col`}>
-      <div className={`sub-column`}>
-        <div className={`flex items-center text-sm text-secondary`}>{name}</div>
-        <div className={`grow`} />
-        <div className={`sub-value font-medium text-md`}>
-          {isInfinity ? (
-            <p>{used}</p>
-          ) : (
-            <>
-              <p>{used}</p>
-              <p className="text-secondary !font-normal text-sm">/{total}</p>
-            </>
-          )}
-        </div>
-      </div>
-      <ValuableProgress
-        className={`w-full h-2`}
-        value={usage.used}
-        max={usage.total}
-      />
-    </div>
-  );
+function SubscriptionUsage(_props: UsageProps) {
+  return null;
 }
 
 export default SubscriptionUsage;

@@ -464,6 +464,77 @@ function ChannelEditor({
               <div className={`channel-row column-layout`}>
                 <div className={`channel-content flex flex-row items-center justify-between w-full`}>
                   <div className={`flex flex-row items-center gap-1`}>
+                    {t("admin.channels.auto-models")}
+                    <Tips content={t("admin.channels.auto-models-tip")} />
+                  </div>
+                  <Switch
+                    checked={edit.auto_models || false}
+                    onCheckedChange={(value) =>
+                      dispatch({ type: "set-auto-models", value })
+                    }
+                  />
+                </div>
+              </div>
+            </ParagraphItem>
+            <ParagraphItem>
+              <div className={`channel-row column-layout`}>
+                <div className={`channel-content flex flex-row items-center justify-between w-full`}>
+                  <div className={`flex flex-row items-center gap-1`}>
+                    {t("admin.channels.auto-price")}
+                    <Tips content={t("admin.channels.auto-price-tip")} />
+                  </div>
+                  <Switch
+                    checked={edit.auto_price || false}
+                    onCheckedChange={(value) =>
+                      dispatch({ type: "set-auto-price", value })
+                    }
+                  />
+                </div>
+              </div>
+            </ParagraphItem>
+            {edit.auto_price && (
+              <>
+                <ParagraphItem>
+                  <div className={`channel-row column-layout`}>
+                    <div className={`channel-content`}>
+                      {t("admin.channels.price-adjust")}
+                      <Tips content={t("admin.channels.price-adjust-tip")} />
+                    </div>
+                    <NumberInput
+                      value={edit.price_adjust || 0}
+                      acceptNegative={true}
+                      onValueChange={(value) =>
+                        dispatch({ type: "set-price-adjust", value })
+                      }
+                    />
+                  </div>
+                </ParagraphItem>
+                <ParagraphItem>
+                  <div className={`channel-row column-layout`}>
+                    <div className={`channel-content flex flex-row items-center justify-between w-full`}>
+                      <div className={`flex flex-row items-center gap-1`}>
+                        {t("admin.channels.price-overwrite")}
+                        <Tips content={t("admin.channels.price-overwrite-tip")} />
+                      </div>
+                      <Switch
+                        checked={edit.price_overwrite || false}
+                        onCheckedChange={(value) =>
+                          dispatch({ type: "set-price-overwrite", value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </ParagraphItem>
+                <ParagraphDescription>
+                  {t("admin.channels.auto-price-desc")}
+                </ParagraphDescription>
+                <ParagraphSpace />
+              </>
+            )}
+            <ParagraphItem>
+              <div className={`channel-row column-layout`}>
+                <div className={`channel-content flex flex-row items-center justify-between w-full`}>
+                  <div className={`flex flex-row items-center gap-1`}>
                     {t("admin.channels.first-message-as-user")}
                     <Tips content={t("admin.channels.first-message-as-user-tip")} />
                   </div>

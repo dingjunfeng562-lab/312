@@ -1,18 +1,18 @@
 <div align="center">
 
-![chatnio](/app/public/logo.png)
+![Ai idea](/app/public/logo.png)
 
-# [🥳 CoAI.Dev](https://coai.dev)
+# [🥳 Ai idea](https://coai.dev)
 
 #### 🚀 下一代 AIGC 一站式商业解决方案
-#### *“ CoAI.Dev > [Next Web](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web) + [One API](https://github.com/songquanpeng/one-api) ”*
+#### *“ Ai idea > [Next Web](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web) + [One API](https://github.com/songquanpeng/one-api) ”*
 
 
 [English](./README.md) · 简体中文 · [文档](https://coai.dev) · [Discord](https://discord.gg/rpzNSmqaF2) · [部署文档](https://coai.dev/docs/deploy)
 
-[![CoAI.Dev: #1 Repo Of The Day](https://trendshift.io/api/badge/repositories/6369)](https://trendshift.io/repositories/6369)
+[![Ai idea: #1 Repo Of The Day](https://trendshift.io/api/badge/repositories/6369)](https://trendshift.io/repositories/6369)
 
-<img alt="CoAI.Dev Preview" src="./screenshot/coai.png" width="100%" style="border-radius: 8px">
+<img alt="Ai idea Preview" src="./screenshot/coai.png" width="100%" style="border-radius: 8px">
 
 </div>
 
@@ -25,7 +25,7 @@
 6. 🎨 **文生图支持**: 支持多种文生图模型: **OpenAI DALL-E**✅ & **Midjourney** (支持 **U/V/R** 操作)✅ & Stable Diffusion✅ 等
 7. 📡 **强大对话同步**: **用户 0 成本对话跨端同步支持**，支持**对话分享** (支持链接分享 & 保存为图片 & 分享管理), **无需 WebDav / WebRTC 等依赖和复杂学习成本**
 8. 🎈 **模型市场 & 预设系统**: 支持后台可自定义的模型市场, 可提供模型介绍、标签等参数, 站长可根据情况自定义模型简介。同时支持预设系统，包含 **自定义预设** 和 **云端同步** 功能。
-9. 📖 **丰富文件解析**: **开箱即用**, 支持**所有模型**的文件解析 (PDF / Docx / Pptx / Excel / 图片等格式解析), **支持更多云端图片存储方案** (S3 / R2 / MinIO 等), **支持 OCR 图片识别** 👉 详情参见项目 [CoAI.Dev Blob Service](https://github.com/coaidev/blob-service) (支持 Vercel / Docker 一键部署)
+9. 📖 **丰富文件解析**: **开箱即用**, 支持**所有模型**的文件解析 (PDF / Docx / Pptx / Excel / 图片等格式解析), **支持更多云端图片存储方案** (S3 / R2 / MinIO 等), **支持 OCR 图片识别** 👉 支持 Vercel / Docker 一键部署
 10. 🌏 **全模型联网搜索**: 基于 [SearXNG](https://github.com/searxng/searxng) 开源引擎, 支持 Google / Bing / DuckDuckGo / Yahoo / WikiPedia / Arxiv / Qwant 等丰富搜索引擎搜索, 支持安全搜索模式, 内容截断, 图片代理, 测试搜索可用性等功能。
 11. 💕 **渐进式 Web 应用 (PWA)**: 支持 PWA 应用 & 支持桌面端 (桌面端基于 [Tauri](https://github.com/tauri-apps/tauri))
 12. 🤩 **齐全后台管理**: 支持美观丰富的仪表盘, 公告 & 通知管理, 用户管理, 订阅管理, 礼品码 & 兑换码管理, 价格设定, 订阅设定, 自定义模型市场, 自定义站点名称 & Logo, SMTP 发件设置等功能
@@ -38,23 +38,6 @@
 19. 👋 **SEO 优化**: 支持 SEO 优化，支持自定义站点名称、站点 Logo 等 SEO 优化设设置使搜索引擎更快的爬取，你的站点与众不同👋
 20. 🎫 **多种兑换码体系**: 支持多种兑换码体系，支持礼品码和兑换码，支持批量生成，礼品码适合宣传分发，兑换码适合发卡销售，礼品码一个类型的多个码一个用户仅能兑换一个码，在宣传中一定程度上减少一个用户兑换多次的情况😀
 21. 🥰 **商用友好协议**: 采用 **Apache-2.0** 开源协议, 商用二开 & 分发友好 (也请遵守 Apache-2.0 协议的规定, 请勿用于违法用途)
-
-> ### ✨ CoAI.Dev 商业版
-> ![商业版预览](./screenshot/coai-pro.png)
->
-> - ✅ 美观商业级 UI, 漂亮的前端界面与后台管理
-> - ✅ 支持 TTS & STT, 插件市场, RAG 知识库等丰富功能与模块
-> - ✅ 更多支付供应商, 更多计费模式和高级订单管理
-> - ✅ 支持更多鉴权方式，包括短信登录、OAuth 登录等
-> - ✅ 支持模型监控，渠道健康检测，故障告警自动渠道切换
-> - ✅ 支持多租户 API Key 分发系统, 企业级令牌权限管理与访问者限制
-> - ✅ 支持安全审核, 日志记录, 模型限速, API Gateway 等高级功能
-> - ✅ 支持推广奖励，专业数据统计，用户画像分析等商业分析能力
-> - ✅ 支持Discord/Telegram/飞书等机器人对接集成能力 (扩展模块)
-> - ...
->
-> [👉 了解更多](https://www.coai.dev/docs/contact)
-
 
 ## 🔨 支持模型
 1. OpenAI & Azure OpenAI *(✅ Vision ✅ Function Calling)*
@@ -97,18 +80,18 @@
 1. 安装宝塔面板，前往 [宝塔面板官网](https://www.bt.cn/new/download.html) 进行安装，选择正式版脚本安装。
 2. 登录面板，点击左侧 **Docker** 进入 Docker 管理。
 3. 如提示未安装 Docker / Docker Compose， 可根据上方引导安装。
-4. 安装完成后，进入 **应用商城**，搜索 `CoAI` 并点击 **安装**。
+4. 安装完成后，进入 **应用商城**，搜索 `Ai idea` 并点击 **安装**。
 5. 配置应用基本信息，如您的域名，端口等配置，并点击 **确认** (可使用默认配置)。
 6. 首次安装可能需要等待 1-2 分钟完成数据库初始化。如遇到问题，请查看面板运行日志进行排查。
 7. 访问您配置的域名或服务器 `http://[ip]:[port]`，使用用户名 `baishuwan` 和密码 `baishuwan0825` 登录后台管理。
 
 ### 阿里云计算巢 (一键部署)
- [![Deploy on AlibabaCloud ComputeNest](https://service-info-public.oss-cn-hangzhou.aliyuncs.com/computenest.svg)](https://computenest.console.aliyun.com/service/instance/create/default?type=user&ServiceName=CoAI社区版)
-1. 访问计算巢CoAI[部署链接](https://computenest.console.aliyun.com/service/instance/create/cn-hangzhou?type=user&ServiceName=CoAI社区版)，按提示填写部署参数
+ [![Deploy on AlibabaCloud ComputeNest](https://service-info-public.oss-cn-hangzhou.aliyuncs.com/computenest.svg)](https://computenest.console.aliyun.com/service/instance/create/default?type=user&ServiceName=Ai%20idea社区版)
+1. 访问计算巢 Ai idea [部署链接](https://computenest.console.aliyun.com/service/instance/create/cn-hangzhou?type=user&ServiceName=Ai%20idea社区版)，按提示填写部署参数
 2. 选择付费类型，填写实例参数与网络参数，点击 **确认订单**
 3. 确认部署参数并查看预估价格后，点击立即创建，等待服务实例部署完成
 4. 点击左侧 **服务实例** 等待服务实例部署完成后，点击实例ID进入到详情界面
-5. 点击详情界面**立即使用**中的链接，可进入CoAI社区版界面。默认用户名为`baishuwan`，密码为`baishuwan0825`，登录后台管理。
+5. 点击详情界面**立即使用**中的链接，可进入 Ai idea 社区版界面。默认用户名为`baishuwan`，密码为`baishuwan0825`，登录后台管理。
 6. 更多操作详情与付费信息，参见：[服务详情](https://computenest.console.aliyun.com/service/detail/cn-hangzhou/service-bfbf676bd89d434691fc/1?type=user&isRecommend=true)
 
 ### ⚡ Docker Compose 安装 (推荐)
@@ -207,7 +190,7 @@ nohup ./chatnio > output.log & # using nohup to run in background
    - Redis: 存储用户快速鉴权信息, IP 速率限制, 订阅配额, 邮箱验证码等数据。
    - 环境未配置好的情况下, 会导致服务无法正常运行, 请确保你的 MySQL 和 Redis 服务已正常运行 (Docker 部署, 编译部署需自行搭建外部服务)。
 4. **我的机器为 ARM 架构, 该项目支持 ARM 架构吗？**
-   - 支持。CoAI.Dev 项目使用 BuildX 构建多架构镜像, 你可以直接使用 docker-compose 或 docker 运行, 无需额外配置。
+   - 支持。Ai idea 项目使用 BuildX 构建多架构镜像, 你可以直接使用 docker-compose 或 docker 运行, 无需额外配置。
    - 如果你使用编译安装, 直接在 ARM 机器上编译即可, 无需欸外配置。如果你使用 x86 机器编译, 请使用 `GOARCH=arm64 go build -o chatnio` 进行交叉编译并上传至 ARM 机器上运行。
 5. **如何修改 Root 默认密码？**
    - 请点击右上角头像或侧边栏底部用户框进入后台管理, 点击系统设置下常规设置操作栏的 修改 Root 密码 进行修改。或者选择在 用户管理 中选定 root 用户进行修改密码操作。
@@ -216,14 +199,14 @@ nohup ./chatnio > output.log & # using nohup to run in background
    - 如果设置为非 *SERVE_STATIC* 模式, 开启前后端分离部署, 请将后端域名设置为你的后端 API 服务地址, 如 `https://api.example.com`。
    - 后端域名此处用于 Midjourney Proxy 服务的后端回调地址, 如无需使用 Midjourney Proxy 服务, 请忽略此设置。
 7. **如何配置支付方式？**
-   - CoAI.Dev 开源版支持发卡模式, 设置系统设置中的购买链接为你的发卡地址即可。卡密可通过用户管理中兑换码管理中批量生成。
+   - Ai idea 开源版支持发卡模式, 设置系统设置中的购买链接为你的发卡地址即可。卡密可通过用户管理中兑换码管理中批量生成。
 8. **礼品码和兑换码有什么区别？**
    - 礼品码一种类型只能一个用户只能绑定一次, 而非 aff code, 发福利等方式可使用礼品码, 可在头像下拉菜单中的礼品码中兑换。
    - 兑换码一种类型可以多个用户绑定, 可作为正常购买和发卡使用, 可在用户管理中的兑换码管理中批量生成, 在头像下拉菜单的点数（菜单第一个）内输入兑换码进行兑换。
    - 一个例子：比如我发了一个类型为 *新年快乐* 的福利, 此时推荐使用礼品码, 假设发放 100 个 66 点数, 如果为兑换码, 手快的一个用户就批量把所有兑换码的 6600 点数都用完了, 而礼品码则可以保证每个用户只能使用一次 (获得 66 点数)。
    - 而搭建发卡的时, 如果用礼品码, 因为一个类型只能兑换一次, 购买多个礼品码会导致兑换失败, 而兑换码则可以在此场景下使用。
 9. **该项目支持 Vercel 部署吗？**
-   - CoAI.Dev 本身并不支持 Vercel 部署, 但是你可以使用前后端分离模式,  Vercel 部署前端部分, 后端部分使用 Docker 部署或编译部署。
+   - Ai idea 本身并不支持 Vercel 部署, 但是你可以使用前后端分离模式,  Vercel 部署前端部分, 后端部分使用 Docker 部署或编译部署。
 10. **前后端分离部署模式是什么？**
     - 正常情况下, 前后端在同一服务内, 后端地址为 `/api`。前后端分离部署指前端和后端分别部署在不同的服务上, 前端服务为静态文件服务, 后端服务为 API 服务。
       - 举个例子, 前端使用 Nginx (或 Vercel 等) 部署, 部署的域名为 `https://www.chatnio.net`。
@@ -279,7 +262,7 @@ nohup ./chatnio > output.log & # using nohup to run in background
 因此，我们希望能够将这两种项目的优势结合起来，做出一个既有强大的 API 分发系统，又有丰富的用户界面设计的项目，
 这样既能满足 C 端用户的需求，又能发展 B 端业务，提高用户体验，降低用户学习成本，提高用户粘性。
 
-于是，**CoAI.Dev** 应运而生，我们希望能够做出一个既有强大的 API 分发系统，又有丰富的用户界面设计的项目，成为下一代开源 AIGC 项目的商业一站式解决方案。
+于是，**Ai idea** 应运而生，我们希望能够做出一个既有强大的 API 分发系统，又有丰富的用户界面设计的项目，成为下一代开源 AIGC 项目的商业一站式解决方案。
 
 
 ## ❤ 捐助

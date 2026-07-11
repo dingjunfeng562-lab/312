@@ -87,6 +87,8 @@ func VideosRelayAPI(c *gin.Context) {
 		Prompt:         prompt,
 		Seconds:        form.Seconds,
 		Size:           form.Size,
+		AspectRatio:    form.AspectRatio,
+		Resolution:     form.Resolution,
 		InputReference: form.InputReference,
 	})
 	props.User = auth.GetUsernameString(db, user)

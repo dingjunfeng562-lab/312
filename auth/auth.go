@@ -140,14 +140,14 @@ func SignUp(c *gin.Context, form RegisterForm) (string, error) {
 		return "", errors.New("invalid email verification code")
 	}
 
-	// 如果开启了邀请码注册，验证邀请码
+	// Validate a supplied invitation code. Invitation-only mode only controls
+	// whether the field is mandatory; optional codes still receive their quota.
 	invitationCode := strings.TrimSpace(form.InvitationCode)
 	var invitation *Invitation
-	if globals.InvitationOnly {
-		if invitationCode == "" {
-			return "", errors.New("invitation code is required")
-		}
-
+	if globals.InvitationOnly && invitationCode == "" {
+		return "", errors.New("invitation code is required")
+	}
+	if invitationCode != "" {
 		inv, err := GetInvitation(db, invitationCode)
 		if err != nil {
 			return "", fmt.Errorf("invalid invitation code: %s", err.Error())
@@ -164,24 +164,57 @@ func SignUp(c *gin.Context, form RegisterForm) (string, error) {
 		Username: username,
 		Password: hash,
 		Email:    email,
-		BindID:   getMaxBindId(db) + 1,
 		Token:    utils.Sha2Encrypt(email + username),
 	}
 
-	if _, err := globals.ExecDb(db, `
-			INSERT INTO auth (username, password, email, bind_id, token)
-			VALUES (?, ?, ?, ?, ?)
-			`, user.Username, user.Password, user.Email, user.BindID, user.Token); err != nil {
+	tx, err := db.Begin()
+	if err != nil {
+		return "", fmt.Errorf("failed to start registration transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	result, err := tx.Exec(globals.PreflightSql(`
+		INSERT INTO auth (username, password, email, token)
+		VALUES (?, ?, ?, ?)
+	`), user.Username, user.Password, user.Email, user.Token)
+	if err != nil {
 		return "", err
 	}
+	user.ID, err = result.LastInsertId()
+	if err != nil {
+		return "", fmt.Errorf("failed to get registered user id: %w", err)
+	}
 
-	user.CreateInitialQuota(db)
+	if _, err := tx.Exec(globals.PreflightSql(`
+		INSERT INTO quota (user_id, quota, used) VALUES (?, ?, ?)
+	`), user.ID, channel.SystemInstance.GetInitialQuota(), 0.); err != nil {
+		return "", fmt.Errorf("failed to create initial quota: %w", err)
+	}
 
-	// 如果有邀请码，使用邀请码增加配额
+	// Consume the code and grant its quota in the same transaction as signup.
 	if invitation != nil {
-		if err := invitation.UseInvitation(db, *user); err != nil {
-			globals.Warn(fmt.Sprintf("failed to use invitation code: %s", err.Error()))
+		result, err := tx.Exec(globals.PreflightSql(`
+			UPDATE invitation SET used = TRUE, used_id = ?
+			WHERE id = ? AND used = FALSE
+		`), user.ID, invitation.Id)
+		if err != nil {
+			return "", fmt.Errorf("failed to use invitation code: %w", err)
 		}
+		if rows, err := result.RowsAffected(); err != nil {
+			return "", fmt.Errorf("failed to verify invitation code: %w", err)
+		} else if rows == 0 {
+			return "", errors.New("this invitation code has been used")
+		}
+
+		if _, err := tx.Exec(globals.PreflightSql(`
+			UPDATE quota SET quota = quota + ? WHERE user_id = ?
+		`), invitation.GetQuota(), user.ID); err != nil {
+			return "", fmt.Errorf("failed to apply invitation quota: %w", err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return "", fmt.Errorf("failed to complete registration: %w", err)
 	}
 
 	return user.GenerateToken()

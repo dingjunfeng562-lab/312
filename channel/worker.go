@@ -20,6 +20,9 @@ func NewChatRequest(group string, props *adaptercommon.ChatProps, hook globals.H
 	var err error
 	for !ticker.IsDone() {
 		if channel := ticker.Next(); channel != nil {
+			if props.Buffer != nil {
+				props.Buffer.SetCharge(ChargeInstance.GetChargeByChannel(props.OriginalModel, utils.ToPtr(channel.GetId())), channel.GetId())
+			}
 			props.MaxRetries = utils.ToPtr(channel.GetRetry())
 			if err = adapter.NewChatRequest(channel, props, hook); adapter.IsSkipError(err) {
 				return err
@@ -64,6 +67,9 @@ func PreflightCache(cache *redis.Client, model string, hash string, buffer *util
 	buffer.SetInputTokens(buf.CountInputToken())
 	buffer.SetToolCalls(buf.GetToolCalls())
 	buffer.SetFunctionCall(buf.GetFunctionCall())
+	if channelId := buf.GetChannelId(); channelId != nil {
+		buffer.SetCharge(ChargeInstance.GetChargeByChannel(model, channelId), *channelId)
+	}
 
 	return idx, true, hook(&globals.Chunk{
 		Content:      data,
@@ -116,6 +122,7 @@ func NewVideoRequestWithCache(_ *redis.Client, buffer *utils.Buffer, group strin
 	var times int = 0
 	for !ticker.IsDone() {
 		if channel := ticker.Next(); channel != nil {
+			buffer.SetCharge(ChargeInstance.GetChargeByChannel(props.OriginalModel, utils.ToPtr(channel.GetId())), channel.GetId())
 			times++
 			props.MaxRetries = utils.ToPtr(channel.GetRetry())
 			if err = adapter.NewVideoRequest(channel, props, hook); adapter.IsSkipError(err) {

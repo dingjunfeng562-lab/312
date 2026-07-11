@@ -49,8 +49,9 @@
     "english-model": "英語モデル",
     "badges": {
       "non-billing": "無料",
-      "times-billing": "{{price }}/回",
-      "token-billing": "入力{{input }}/ 1 kトークン出力{{output }}/ 1 kトークン",
+      "times-billing": "{{price}} クレジット/回",
+      "token-billing": "入力 {{input}} クレジット/1k tokens 出力 {{output}} クレジット/1k tokens",
+      "token-price": "{{price}} クレジット",
       "add": "ワークベンチを追加",
       "remove": "ワークベンチを削除",
       "plan-included": "サブスクリプションに含まれるもの",
@@ -79,6 +80,8 @@
     "switch-bookmark": "作業台",
     "remove-bookmark": "メニューバーからモデルを削除しました",
     "add-bookmark": "モデルがメニューバーに追加されました",
+    "unavailable": "モデルマーケットはまだ利用できません",
+    "unavailable-desc": "管理者が管理画面で価格設定を完了するまでお待ちください",
     "show-1m-pricing": "100万トークン"
   },
   "conversation": {
@@ -343,7 +346,10 @@
     "file": "ファイル",
     "parse-success-prompt": "ファイルが正常に解析されました: {{file}}",
     "uploading": "ファイルのアップロード中…",
-    "uploading-prompt": "ファイルをアップロードしています。しばらくお待ちください"
+    "uploading-prompt": "ファイルをアップロードしています。しばらくお待ちください",
+    "unsupported": "サポートされていないファイル",
+    "unsupported-prompt": "{{file}}は、サポートされているテキスト、PPT、Word、PDF、Excel、画像、オーディオ、コード、またはデータファイルではありません",
+    "image-model-required-prompt": "現在のモデルは画像に対応していません。画像認識対応モデルを選択するか、モデルのOCRを有効にしてファイル解析サービスを設定してください。"
   },
   "generate": {
     "title": "AIプロジェクトビルダー",
@@ -592,7 +598,16 @@
       "first-message-as-user-desc": "一部のモデル(DeepSeekなど)は、アシスタントロールとしての最初のメッセージをサポートしていません。このオプションをオンにすると、アシスタントロールの最初のメッセージがユーザーロールに変換されます。",
       "merge-consecutive-user-messages": "継続的なユーザーメッセージをマージする",
       "merge-consecutive-user-messages-tip": "オンの場合、両方の連続したメッセージがユーザーメッセージである場合、は1つのメッセージにマージされます",
-      "merge-consecutive-user-messages-desc": "DeepSeekなどの一部のモデルでは、2つの連続したユーザーメッセージをサポートしていません。このオプションを有効にすると、2つの連続したユーザーメッセージを1つのメッセージに結合できます。"
+      "merge-consecutive-user-messages-desc": "DeepSeekなどの一部のモデルでは、2つの連続したユーザーメッセージをサポートしていません。このオプションを有効にすると、2つの連続したユーザーメッセージを1つのメッセージに結合できます。",
+      "auto-models": "上流モデルを自動取得",
+      "auto-models-tip": "チャネル保存時に上流の /v1/models を取得し、実際に利用可能なモデルで更新します",
+      "auto-price": "上流価格を自動取得",
+      "auto-price-tip": "チャネル保存時に上流の /v1/charge を呼び出して課金ルールを同期します",
+      "price-adjust": "価格調整額",
+      "price-adjust-tip": "正の値は値上げ、負の値は値下げです。入力・出力価格を調整し、最低値は 0 です",
+      "price-overwrite": "既存価格を上書き",
+      "price-overwrite-tip": "同じモデルのローカル課金ルールを上書きします。無効の場合は未設定モデルのみ追加します",
+      "auto-price-desc": "上流は CoAI /v1/charge 価格 API に対応している必要があります。価格単位は上流ルールに従います。"
     },
     "charge": {
       "id": "ID",
@@ -639,7 +654,9 @@
       "new-group-buy-price": "購入レート",
       "new-group-consume-price": "消費比率",
       "new-group-description": "説明",
-      "update-group": "ユーザーグループを更新する"
+      "update-group": "ユーザーグループを更新する",
+      "sync-channel": "チャンネルを同期",
+      "sync-channel-empty": "このチャンネルで同期する選択されたモデル価格はありません"
     },
     "system": {
       "general": "全般設定",
@@ -982,7 +999,14 @@
       "reverse-model": "リバースモデル",
       "reverse-model-tip": "リバースエンジニアリングモデルがURLによる完全なファイル解析（ PDF、Wordなど）をサポートしている場合、このオプションをオンにすることができ、すべての種類のファイル解析がアップストリームによって提供され、トークンの消費が削減されます。デフォルトでオンになっていない場合、このプロジェクトによって解決されます。これはほとんどのモデルに適用されます。ファイル解析サービスが外部URLストレージスキーム（ S 3/R 2/MinIOなど）を構成しており、外部URL解析ファイルがモデルの上流でサポートされていることを確認してください。",
       "thinking-model": "思考モデル",
-      "thinking-model-tip": "モデルがディープシンキングをサポートしているかどうか（ディープシンキングモデルは、クロード3.7ソネットなどのコンテンツを出力する際に一連の思考を出力します）"
+      "thinking-model-tip": "モデルがディープシンキングをサポートしているかどうか（ディープシンキングモデルは、クロード3.7ソネットなどのコンテンツを出力する際に一連の思考を出力します）",
+      "model-channels": "アフィリエイトチャンネル",
+      "no-channel": "チャネルが設定されていません",
+      "select-all": "すべて選択",
+      "select-model": "モデル{{name}}を選択",
+      "batch-delete": "一括削除({{count}})",
+      "select-channel": "チャンネルで選択",
+      "channel": "チャネル"
     },
     "model-chart-tip": "トークンの使用状況",
     "subscription": "サブスクリプション管理",
@@ -1032,14 +1056,25 @@
     "user-type-chart-tip": "他の有料ユーザー：有効期限切れのユーザーまたはポイントが現在の初期ポイントを超えるユーザーをサブスクライブするユーザーを指します（招待コードを使用するなどの操作もポイントの増加としてカウントされます）",
     "is-banned": "禁止",
     "email": "メール",
-    "quota-set-action": "ポイント設定",
-    "quota-set-action-desc": "ユーザーのクレジットを設定する",
+    "quota-set-action-desc": "ユーザーのポイントを設定する（0以上）",
+    "quota-balance": "ユーザーの現在のポイント：{{quota}}",
     "release-subscription-action": "サブスクリプションの使用をリリースする",
     "release-subscription-action-desc": "ユーザーのサブスクリプション使用を無料にしますか？",
     "subscription-level": "サポートランクを設定する",
     "subscription-level-desc": "ユーザーのサブスクリプションレベルの設定",
     "password-action": "パスワード変更",
     "password-action-desc": "ユーザーの新しいパスワードを入力してください",
+    "username-action": "ユーザー名を変更",
+    "username-action-desc": "新しいユーザー名を入力してください（2〜24文字）",
+    "used-quota-action": "使用済みポイントを設定",
+    "used-quota-action-desc": "累積使用ポイントを設定します（0以上）",
+    "total-month-action": "購読月数を設定",
+    "total-month-action-desc": "累積購読月数を設定します（0以上）",
+    "enterprise-action": "エンタープライズ状態を設定",
+    "enterprise-action-desc": "このユーザーをエンタープライズユーザーとして設定します",
+    "delete-user-action": "ユーザーを削除",
+    "delete-user-action-desc": "{{username}} と会話、キー、ポイント、購読データを完全に削除します。この操作は元に戻せません。",
+    "delete-user-confirm": "完全に削除",
     "email-action": "メールアドレスを変更する",
     "email-action-desc": "ユーザーの新しいメールアドレスを入力してください",
     "invitation-code-action": "招待コードを紐付ける",
@@ -1148,7 +1183,8 @@
     "custom-group-action-desc": "カスタムグループ名を入力してください",
     "group-setting": "グループ設定",
     "notifications": "プッシュセンター",
-    "notify-all": "すべてのユーザーに通知"
+    "notify-all": "すべてのユーザーに通知",
+    "quota-set-action": "ポイント設定"
   },
   "mask": {
     "title": "プリセット",
@@ -1656,6 +1692,16 @@
     "test-required-error": "新しいプラグインを作成する前に、接続をテストする必要があります",
     "test-required-hint": "新しいプラグインは、作成する前に接続をテストする必要があります",
     "form-error": "必須項目を入力してください"
+  },
+  "code-management": {
+    "invitation-menu": "招待コード",
+    "gift-menu": "ギフトコード",
+    "invitation-title": "招待コード管理",
+    "gift-title": "ギフトコード管理",
+    "invitation-description": "招待コードは新規登録時に使用し、新規ユーザーへクレジットを付与します。",
+    "gift-description": "ギフトコードは登録済みユーザーがウォレットでクレジットに交換します。",
+    "go-to-gift": "ギフトコード管理へ",
+    "go-to-invitation": "招待コード管理へ"
   },
   "aff": {
     "title": "プロモーションシェア",

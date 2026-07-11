@@ -1,6 +1,5 @@
 import { useSelector } from "react-redux";
 import { selectAdmin, selectAuthenticated } from "@/store/auth.ts";
-import { levelSelector } from "@/store/subscription.ts";
 import { useMemo } from "react";
 
 export const AnonymousType = "anonymous";
@@ -21,23 +20,14 @@ export const allGroups: string[] = [
 
 export function useGroup(countAdminLevel?: boolean): string {
   const auth = useSelector(selectAuthenticated);
-  const level = useSelector(levelSelector);
   const admin = useSelector(selectAdmin);
 
   return useMemo(() => {
     if (!auth) return AnonymousType;
     if (countAdminLevel && admin) return AdminType;
-    switch (level) {
-      case 1:
-        return BasicType;
-      case 2:
-        return StandardType;
-      case 3:
-        return ProType;
-      default:
-        return NormalType;
-    }
-  }, [auth, level, admin]);
+    // 订阅功能已移除，所有用户都是 normal
+    return NormalType;
+  }, [auth, admin]);
 }
 
 export function hitGroup(group: string[]): boolean {

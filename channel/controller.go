@@ -79,10 +79,19 @@ func CreateChannel(c *gin.Context) {
 		return
 	}
 
-	state := ConduitInstance.CreateChannel(&channel)
+	channel.Id = ConduitInstance.GetMaxId() + 1
+	state := prepareChannel(&channel)
+	var charge ChargeSequence
+	if state == nil {
+		charge, state = syncChannelCharge(&channel)
+	}
+	if state == nil {
+		state = ConduitInstance.CreateChannel(&channel)
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"status": state == nil,
-		"error":  utils.GetError(state),
+		"status":        state == nil,
+		"error":         utils.GetError(state),
+		"synced_prices": len(charge),
 	})
 }
 
@@ -99,11 +108,46 @@ func UpdateChannel(c *gin.Context) {
 	id := c.Param("id")
 	channel.Id = utils.ParseInt(id)
 
-	state := ConduitInstance.UpdateChannel(channel.Id, &channel)
+	state := prepareChannel(&channel)
+	var charge ChargeSequence
+	if state == nil {
+		charge, state = syncChannelCharge(&channel)
+	}
+	if state == nil {
+		state = ConduitInstance.UpdateChannel(channel.Id, &channel)
+	}
 	c.JSON(http.StatusOK, gin.H{
-		"status": state == nil,
-		"error":  utils.GetError(state),
+		"status":        state == nil,
+		"error":         utils.GetError(state),
+		"synced_prices": len(charge),
 	})
+}
+
+func prepareChannel(channel *Channel) error {
+	if !channel.AutoModels {
+		return nil
+	}
+	models, err := channel.FetchModels()
+	if err != nil {
+		return err
+	}
+	channel.Models = models
+	return nil
+}
+
+func syncChannelCharge(channel *Channel) (ChargeSequence, error) {
+	if !channel.AutoPrice {
+		return nil, nil
+	}
+
+	charge, err := channel.FetchCharge()
+	if err != nil {
+		return nil, err
+	}
+	if err := ChargeInstance.SyncRules(charge, channel.PriceOverwrite); err != nil {
+		return nil, err
+	}
+	return charge, nil
 }
 
 func SetCharge(c *gin.Context) {
@@ -126,7 +170,26 @@ func SetCharge(c *gin.Context) {
 func GetChargeList(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": true,
-		"data":   ChargeInstance.ListRules(),
+		"data":   ChargeInstance.ListActiveRules(ConduitInstance),
+	})
+}
+
+func FetchChannelCharge(c *gin.Context) {
+	instance := ConduitInstance.Sequence.GetChannelById(utils.ParseInt(c.Param("id")))
+	if instance == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": false,
+			"error":  "channel not found",
+			"data":   ChargeSequence{},
+		})
+		return
+	}
+
+	charge, err := instance.FetchCharge()
+	c.JSON(http.StatusOK, gin.H{
+		"status": err == nil,
+		"error":  utils.GetError(err),
+		"data":   charge,
 	})
 }
 
@@ -174,27 +237,6 @@ func UpdateConfig(c *gin.Context) {
 	}
 
 	state := SystemInstance.UpdateConfig(&config)
-	c.JSON(http.StatusOK, gin.H{
-		"status": state == nil,
-		"error":  utils.GetError(state),
-	})
-}
-
-func GetPlanConfig(c *gin.Context) {
-	c.JSON(http.StatusOK, PlanInstance)
-}
-
-func UpdatePlanConfig(c *gin.Context) {
-	var config PlanManager
-	if err := c.ShouldBindJSON(&config); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"status": false,
-			"error":  err.Error(),
-		})
-		return
-	}
-
-	state := PlanInstance.UpdateConfig(&config)
 	c.JSON(http.StatusOK, gin.H{
 		"status": state == nil,
 		"error":  utils.GetError(state),

@@ -119,7 +119,9 @@ export function inferModelType(id: string): ModelType {
   return "chat";
 }
 
-export function getModelType(model: Pick<Model, "id" | "model_type">): ModelType {
+export function getModelType(
+  model: Pick<Model, "id" | "model_type">,
+): ModelType {
   const type = model.model_type;
   return modelTypes.includes(type as ModelType)
     ? (type as ModelType)
@@ -232,12 +234,30 @@ export async function getFilledApiMarket(
 
 function getChargeForModel(
   charge: ChargeProps[],
-  model: string,
+  model: Pick<Model, "id" | "channel_id">,
 ): ChargeProps | undefined {
-  const exact = charge.find((item: ChargeProps) => item.models.includes(model));
+  const exact = charge.find(
+    (item: ChargeProps) =>
+      item.channel_id === model.channel_id && item.models.includes(model.id),
+  );
   if (exact) return exact;
 
-  return charge.find((item: ChargeProps) => item.models.includes("*"));
+  const channelWildcard = charge.find(
+    (item: ChargeProps) =>
+      item.channel_id === model.channel_id && item.models.includes("*"),
+  );
+  if (channelWildcard) return channelWildcard;
+
+  const legacy = charge.find(
+    (item: ChargeProps) =>
+      item.channel_id === undefined && item.models.includes(model.id),
+  );
+  if (legacy) return legacy;
+
+  return charge.find(
+    (item: ChargeProps) =>
+      item.channel_id === undefined && item.models.includes("*"),
+  );
 }
 
 export async function bindMarket(options?: v1Options): Promise<Model[]> {
@@ -248,7 +268,7 @@ export async function bindMarket(options?: v1Options): Promise<Model[]> {
     item.response_speed = getModelResponseSpeed(item);
     item.model_type = getModelType(item);
 
-    const instance = getChargeForModel(charge, item.id);
+    const instance = getChargeForModel(charge, item);
     if (!instance) return;
 
     item.free = instance.type === nonBilling;
@@ -269,6 +289,13 @@ export async function getApiCharge(
     console.warn(e);
     return [];
   }
+}
+
+export async function isModelMarketAvailable(
+  options?: v1Options,
+): Promise<boolean> {
+  const charge = await getApiCharge(options);
+  return charge.length > 0;
 }
 
 export async function listApiKey(

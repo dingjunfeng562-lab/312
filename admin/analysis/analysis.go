@@ -34,15 +34,8 @@ func getMinuteFormat(t time.Time) string {
 }
 
 func GetSubscriptionUsers(db *sql.DB) int64 {
-	var count int64
-	err := globals.QueryRowDb(db, `
-   		SELECT COUNT(*) FROM subscription WHERE expired_at > NOW()
-   	`).Scan(&count)
-	if err != nil {
-		return 0
-	}
-
-	return count
+	// 订阅功能已移除，返回 0
+	return 0
 }
 
 func GetBillingToday(cache *redis.Client) float32 {

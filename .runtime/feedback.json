@@ -1,0 +1,1 @@
+{"type":"接口报错","question":"GET /v1/skills/models/{name}/pricing 对包含斜杠的有效模型名（例如 kimi/kimi-k2.7-code）返回 404。%2F 和 %252F 均无法获取价格。","endpoint":"/v1/skills/models/{name}/pricing","context":"从 GET /v1/skills/models 返回该模型，按文档请求 pricing，用于渠道自动价格同步。需要支持斜杠模型名或提供 query/批量价格接口。","ai_tool":"Cline"}

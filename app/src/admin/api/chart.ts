@@ -8,6 +8,8 @@ import {
   ModelChartResponse,
   RedeemResponse,
   RequestChartResponse,
+  QuotaOperationResponse,
+  UserData,
   UserResponse,
   UserTypeChartResponse,
 } from "@/admin/types.ts";
@@ -201,7 +203,7 @@ export async function getUserList(
       params: {
         page,
         search,
-        params,
+        ...params,
       },
     });
     return response.data as UserResponse;
@@ -212,6 +214,29 @@ export async function getUserList(
       data: [],
       total: 0,
     };
+  }
+}
+
+export async function updateUserProfile(
+  user: Pick<
+    UserData,
+    "id" | "username" | "email" | "used_quota" | "total_month" | "enterprise"
+  >,
+): Promise<CommonResponse> {
+  try {
+    const response = await axios.post("/admin/user/profile", user);
+    return response.data as CommonResponse;
+  } catch (e) {
+    return { status: false, message: getErrorMessage(e) };
+  }
+}
+
+export async function deleteUserOperation(id: number): Promise<CommonResponse> {
+  try {
+    const response = await axios.post("/admin/user/delete", { id });
+    return response.data as CommonResponse;
+  } catch (e) {
+    return { status: false, message: getErrorMessage(e) };
   }
 }
 
@@ -260,18 +285,18 @@ export async function setUserInvitationCode(
   }
 }
 
-export async function quotaOperation((
+export async function quotaOperation(
   id: number,
   quota: number,
   override?: boolean,
-): Promise<CommonResponse> {
+): Promise<QuotaOperationResponse> {
   try {
     const response = await axios.post("/admin/user/quota", {
       id,
       quota,
       override: override ?? false,
     });
-    return response.data as CommonResponse;
+    return response.data as QuotaOperationResponse;
   } catch (e) {
     return { status: false, message: getErrorMessage(e) };
   }

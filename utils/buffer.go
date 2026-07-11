@@ -34,6 +34,7 @@ type Buffer struct {
 	Prompts         string                `json:"prompts"`
 	TokenName       string                `json:"-"`
 	Charge          Charge                `json:"-"`
+	ChannelId       *int                  `json:"channel_id,omitempty"`
 	VisionRecall    bool                  `json:"-"`
 }
 
@@ -234,6 +235,19 @@ func (b *Buffer) GetModel() string {
 
 func (b *Buffer) GetCharge() Charge {
 	return b.Charge
+}
+
+func (b *Buffer) SetCharge(charge Charge, channelId int) {
+	if charge == nil {
+		return
+	}
+	b.Charge = charge
+	b.ChannelId = ToPtr(channelId)
+	b.Quota = CountInputQuota(charge, b.InputTokens)
+}
+
+func (b *Buffer) GetChannelId() *int {
+	return b.ChannelId
 }
 
 func (b *Buffer) ToChargeInfo() string {
